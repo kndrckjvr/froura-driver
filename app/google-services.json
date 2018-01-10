@@ -1,0 +1,143 @@
+{
+  "project_info": {
+    "project_number": "709695783632",
+    "firebase_url": "https://frouramobileapp-546a9.firebaseio.com",
+    "project_id": "frouramobileapp-546a9",
+    "storage_bucket": "frouramobileapp-546a9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709695783632:android:215205398bfdfe44",
+        "android_client_info": {
+          "package_name": "com.froura.devlo4.prototype"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "709695783632-ef0kpiptvkai9p4oj1ot56lancd7nv01.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.froura.devlo4.prototype",
+            "certificate_hash": "13707e76acc7fcbae0582e92ecfd5e58aa31a277"
+          }
+        },
+        {
+          "client_id": "709695783632-q3kldsn6vq348ulec1oads0bggm006o1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3QsmlyCzrBfzkz-1ADKvxBdcWsaKImLA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "709695783632-q3kldsn6vq348ulec1oads0bggm006o1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709695783632:android:5f37a5c89708fcdd",
+        "android_client_info": {
+          "package_name": "com.froura.develo4.driver"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "709695783632-jfepqobckpuqmhtmsvakuc4eo0d12og3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.froura.develo4.driver",
+            "certificate_hash": "13707e76acc7fcbae0582e92ecfd5e58aa31a277"
+          }
+        },
+        {
+          "client_id": "709695783632-q3kldsn6vq348ulec1oads0bggm006o1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3QsmlyCzrBfzkz-1ADKvxBdcWsaKImLA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "709695783632-q3kldsn6vq348ulec1oads0bggm006o1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:709695783632:android:f6829edc3588cbdf",
+        "android_client_info": {
+          "package_name": "com.froura.develo4.passenger"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "709695783632-2jiek09732r0s2q65tpkbr8rpvg1k8b0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.froura.develo4.passenger",
+            "certificate_hash": "13707e76acc7fcbae0582e92ecfd5e58aa31a277"
+          }
+        },
+        {
+          "client_id": "709695783632-q3kldsn6vq348ulec1oads0bggm006o1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3QsmlyCzrBfzkz-1ADKvxBdcWsaKImLA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "709695783632-q3kldsn6vq348ulec1oads0bggm006o1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
