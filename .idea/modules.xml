@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://D:\Projects\froura-driver\app\app.iml" filepath="D:\Projects\froura-driver\app\app.iml" />
       <module fileurl="file://$PROJECT_DIR$/froura-driver.iml" filepath="$PROJECT_DIR$/froura-driver.iml" />
+      <module fileurl="file://D:\Projects\froura-driver\froura-driver.iml" filepath="D:\Projects\froura-driver\froura-driver.iml" />
     </modules>
   </component>
 </project>
