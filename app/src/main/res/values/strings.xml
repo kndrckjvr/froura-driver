@@ -6,6 +6,8 @@
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
+    <string name="mapbox_token">pk.eyJ1IjoiZnJvdXJhIiwiYSI6ImNqZGRmeWRncjAwenYzM29iczZuMnZobWkifQ.T5vfjklMbukIIp0aX9Aplw</string>
+
     <string name="registration_note">Please enter your details. Only drivers assigned to you will see them.</string>
 
     <string name="ok">Ok</string>

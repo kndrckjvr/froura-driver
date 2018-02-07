@@ -5,4 +5,7 @@
     <color name="colorAccent">#000000</color>
     <color name="textViewColor">#565656</color>
     <color name="textLinkColor">#0000EE</color>
+    <color name="mapboxWhite">#ffffff</color>
+    <color name="mapboxBlue">#4264fb</color>
+    <color name="mapboxGrayLight">#c6d2e1</color>
 </resources>

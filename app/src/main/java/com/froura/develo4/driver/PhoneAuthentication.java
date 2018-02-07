@@ -3,8 +3,10 @@ package com.froura.develo4.driver;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
@@ -32,6 +34,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.apache.commons.lang3.text.WordUtils;
+
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeUnit;
 
@@ -49,10 +53,11 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     private String mobNum;
     private String email;
     private String name;
+    private String profpic = "default";
+    private String auth = "mobile";
     private boolean phoneReg;
     private CountDownTimer requestCodeTimer;
 
-    private String TAG = "PhoneAuth";
     private String mVerificationId;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
 
@@ -68,7 +73,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Login");
-        progressDialog.setMessage("Logging in...");
+        progressDialog.setMessage("Logging in with Mobile...");
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(false);
 
@@ -76,15 +81,13 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         email = getIntent().getStringExtra("email");
         name = getIntent().getStringExtra("name");
         phoneReg = getIntent().getBooleanExtra("phoneReg", false);
-        
+
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(mAuth.getCurrentUser() != null) {
-                    Intent intent = new Intent(PhoneAuthentication.this, HomeActivity.class);
-                    startActivity(intent);
-                    finish();
+                    saveUserDetails();
                     return;
                 }
             }
@@ -107,25 +110,25 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         });
 
         requestCodeTimer = new CountDownTimer(60000, 1000) {
-                    @Override
-                    public void onTick(long l) {
-                        requestCode.setText("Request a new code in 00:"+ l/1000);
-                        requestCode.setTextColor(getResources().getColor(R.color.textViewColor));
-                    }
+            @Override
+            public void onTick(long l) {
+                requestCode.setText("Request a new code in 00:"+ l/1000);
+                requestCode.setTextColor(getResources().getColor(R.color.textViewColor));
+            }
 
-                    @Override
-                    public void onFinish() {
-                        requestCode.setText(Html.fromHtml("<u>Request a new code.</u>"));
-                        requestCode.setTextColor(getResources().getColor(R.color.textLinkColor));
+            @Override
+            public void onFinish() {
+                requestCode.setText(Html.fromHtml("<u>Request a new code.</u>"));
+                requestCode.setTextColor(getResources().getColor(R.color.textLinkColor));
 
-                        requestCode.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                requestCode();
-                            }
-                        });
+                requestCode.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        requestCode();
                     }
-                };
+                });
+            }
+        };
 
         if(mobNum.matches("^(09)\\d{9}$")) {
             mob_num.setText("+63 " + mobNum.substring(1));
@@ -141,18 +144,31 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         }
     }
 
+    private void saveUserDetails() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPref.edit();
+        String JSON_DETAILS_KEY = "userDetails";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobNum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\"}";
+        editor.putString(JSON_DETAILS_KEY, jsonDetails);
+        editor.apply();
+        progressDialog.dismiss();
+        Intent intent = new Intent(PhoneAuthentication.this, HomeActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            userExist(mAuth.getCurrentUser().getUid());
+                            registerUser();
                         }
                     }
                 });
     }
-    
+
     private void requestCode() {
         PhoneAuthProvider.getInstance().verifyPhoneNumber(
                 mobNum,
@@ -168,7 +184,6 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
 
                     @Override
                     public void onVerificationFailed(FirebaseException e) {
-                        Log.w(TAG, "onVerificationFailed", e);
                         if (e instanceof FirebaseAuthInvalidCredentialsException) {
                             //Phone number is incorrect
                             Toast.makeText(PhoneAuthentication.this, "Phone number is incorrect!", Toast.LENGTH_SHORT).show();
@@ -186,27 +201,14 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                 });
     }
 
-    private void userExist(String user_id) {
-        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
-        rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                if (!snapshot.exists()) {
-                    registerUser();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-        });
-    }
-
     private void registerUser() {
         String user_id = mAuth.getCurrentUser().getUid();
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
-        dbRef.child("name").setValue(name);
+        dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
         dbRef.child("email").setValue(email);
         dbRef.child("mobnum").setValue(mobNum);
+        dbRef.child("auth").setValue(auth);
+        dbRef.child("profile_pic").setValue(profpic);
         new CheckUserTasks(PhoneAuthentication.this).execute();
     }
 
@@ -223,9 +225,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     }
 
     @Override
-    public void parseCheckUserJSONString(String jsonString) {
-
-    }
+    public void parseCheckUserJSONString(String jsonString) { }
 
     @Override
     public String createCheckUserPostString(ContentValues contentValues) throws UnsupportedEncodingException {
