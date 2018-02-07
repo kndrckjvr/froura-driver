@@ -42,13 +42,13 @@
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
         <activity
             android:name=".PhoneRegistration"
-            android:screenOrientation="portrait"
             android:label=""
+            android:screenOrientation="portrait"
             android:theme="@style/RegistrationTheme" />
         <activity
             android:name=".PhoneAuthentication"
-            android:screenOrientation="portrait"
             android:label=""
+            android:screenOrientation="portrait"
             android:theme="@style/RegistrationTheme" />
 
         <meta-data
@@ -65,6 +65,10 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
+
+        <activity
+            android:name=".MapsActivity"
+            android:label="@string/title_activity_maps"></activity>
     </application>
 
 </manifest>

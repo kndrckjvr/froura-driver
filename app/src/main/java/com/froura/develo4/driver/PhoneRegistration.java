@@ -51,10 +51,7 @@ public class PhoneRegistration extends AppCompatActivity {
 
         mobET.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                mobNum = mobET.getText().toString().isEmpty() ? "" : mobET.getText().toString();
-                checkMobErrors();
-            }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -63,18 +60,12 @@ public class PhoneRegistration extends AppCompatActivity {
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-                mobNum = mobET.getText().toString().isEmpty() ? "" : mobET.getText().toString();
-                checkMobErrors();
-            }
+            public void afterTextChanged(Editable editable) { }
         });
 
         nameET.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                name = nameET.getText().toString().isEmpty() ? "" : nameET.getText().toString();
-                checkNameErrors();
-            }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -83,18 +74,12 @@ public class PhoneRegistration extends AppCompatActivity {
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-                name = nameET.getText().toString().isEmpty() ? "" : nameET.getText().toString();
-                checkNameErrors();
-            }
+            public void afterTextChanged(Editable editable) { }
         });
 
         emailET.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                email = emailET.getText().toString().isEmpty() ? "" : emailET.getText().toString();
-                checkEmailErrors();
-            }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -103,10 +88,7 @@ public class PhoneRegistration extends AppCompatActivity {
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-                email = emailET.getText().toString().isEmpty() ? "" : emailET.getText().toString();
-                checkEmailErrors();
-            }
+            public void afterTextChanged(Editable editable) { }
         });
     }
 

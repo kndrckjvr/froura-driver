@@ -9,17 +9,13 @@ import android.widget.Button;
 public class LandingActivity extends AppCompatActivity {
 
     private Button mobLogin;
-    private Button googLogin;
-    private Button faceLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
-        //Landing Components
+
         mobLogin = findViewById(R.id.mobLogin);
-        googLogin = findViewById(R.id.googLogin);
-        faceLogin = findViewById(R.id.faceLogin);
 
         mobLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -28,20 +24,6 @@ public class LandingActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
                 return;
-            }
-        });
-
-        googLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
-
-        faceLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
             }
         });
     }
