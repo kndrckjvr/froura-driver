@@ -75,7 +75,7 @@ public class NavigationActivity extends AppCompatActivity implements LocationEng
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Mapbox.getInstanzce(this, getString(R.string.mapbox_token));
+        Mapbox.getInstance(this, getResources().getString(R.string.mapbox_token));
         setContentView(R.layout.activity_navigation);
         mapView = (MapView) findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
