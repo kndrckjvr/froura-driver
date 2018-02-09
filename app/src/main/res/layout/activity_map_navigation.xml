@@ -27,15 +27,6 @@
         android:background="@color/mapboxGrayLight"
         android:textColor="@color/mapboxWhite"/>
 
-    <com.mapbox.services.android.navigation.ui.v5.NavigationView
-        android:id="@+id/navigationView"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:navigationLightTheme="@style/NavigationViewLight"
-        app:navigationDarkTheme="@style/NavigationViewDark"
-        />
-
 </android.support.constraint.ConstraintLayout>
 
 

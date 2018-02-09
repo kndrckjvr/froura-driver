@@ -30,10 +30,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
-import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -152,7 +149,7 @@ public class HomeActivity extends AppCompatActivity
         DatabaseReference bookref = FirebaseDatabase.getInstance().getReference("services/booking");
         bookref.child(mResultList.get(position).getUid())
                 .child("accepted").setValue(uid);
-        Intent intent = new Intent(HomeActivity.this, NavigationActivity.class);
+        Intent intent = new Intent(HomeActivity.this, MapNavigationActivity.class);
         intent.putExtra("pickupLat", mResultList.get(position).getPickupLatLng().getLatitude());
         intent.putExtra("pickupLng", mResultList.get(position).getPickupLatLng().getLongitude());
         intent.putExtra("dropoffLat", mResultList.get(position).getDropoffLatLng().getLatitude());

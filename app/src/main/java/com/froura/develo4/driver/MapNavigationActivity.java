@@ -46,9 +46,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher;
-import java.util.List;
 
-public class NavigationActivity extends AppCompatActivity implements LocationEngineListener, PermissionsListener {
+public class MapNavigationActivity extends AppCompatActivity implements LocationEngineListener, PermissionsListener {
 
     private MapView mapView;
 
@@ -132,7 +131,7 @@ public class NavigationActivity extends AppCompatActivity implements LocationEng
 
                         navView.setVisibility(View.VISIBLE);
                         // Call this method with Context from within an Activity
-                        NavigationLauncher.startNavigation(NavigationActivity.this, options);
+                        NavigationLauncher.startNavigation(MapNavigationActivity.this, options);
                     }
                 });
             };
@@ -195,7 +194,7 @@ public class NavigationActivity extends AppCompatActivity implements LocationEng
 
     @SuppressWarnings( {"MissingPermission"})
     private void initializeLocationEngine() {
-        locationEngine = new LostLocationEngine(NavigationActivity.this);
+        locationEngine = new LostLocationEngine(MapNavigationActivity.this);
         locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
         locationEngine.activate();
 
