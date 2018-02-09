@@ -22,6 +22,8 @@ import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
 import com.mapbox.services.android.location.LostLocationEngine;
 import com.mapbox.services.android.navigation.ui.v5.NavigationView;
 import com.mapbox.services.android.navigation.ui.v5.NavigationViewOptions;
+import com.mapbox.services.android.navigation.v5.navigation.MapboxNavigationOptions;
+import com.mapbox.services.android.navigation.v5.navigation.NavigationUnitType;
 import com.mapbox.services.android.telemetry.location.LocationEngine;
 import com.mapbox.services.android.telemetry.location.LocationEngineListener;
 import com.mapbox.services.android.telemetry.location.LocationEnginePriority;
@@ -120,13 +122,15 @@ public class MapNavigationActivity extends AppCompatActivity implements Location
                         // Set to null to use the default Android speech synthesizer
                         String awsPoolId = null;
 
-                        boolean simulateRoute = true;
+                        MapboxNavigationOptions navOptions = MapboxNavigationOptions.builder()
+                                .unitType(NavigationUnitType.TYPE_METRIC)
+                                .build();
 
                         NavigationViewOptions options = NavigationViewOptions.builder()
                                 .origin(origin)
+                                .navigationOptions(navOptions)
                                 .destination(destination)
                                 .awsPoolId(awsPoolId)
-                                .shouldSimulateRoute(simulateRoute)
                                 .build();
 
                         navView.setVisibility(View.VISIBLE);
