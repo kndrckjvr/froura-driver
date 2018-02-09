@@ -73,13 +73,12 @@ public class MapNavigationActivity extends AppCompatActivity implements Location
     private NavigationMapRoute navigationMapRoute;
 
     private Button button;
-    private NavigationView navView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Mapbox.getInstance(this, getResources().getString(R.string.mapbox_token));
-        setContentView(R.layout.activity_navigation);
+        setContentView(R.layout.activity_map_navigation);
         mapView = (MapView) findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
         // Add user location to the map
@@ -111,7 +110,6 @@ public class MapNavigationActivity extends AppCompatActivity implements Location
                         button.setBackgroundResource(R.color.mapboxBlue);
                     };
                 });
-                navView = findViewById(R.id.navigationView);
                 button = findViewById(R.id.startButton);
                 button.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
@@ -133,7 +131,6 @@ public class MapNavigationActivity extends AppCompatActivity implements Location
                                 .awsPoolId(awsPoolId)
                                 .build();
 
-                        navView.setVisibility(View.VISIBLE);
                         // Call this method with Context from within an Activity
                         NavigationLauncher.startNavigation(MapNavigationActivity.this, options);
                     }
