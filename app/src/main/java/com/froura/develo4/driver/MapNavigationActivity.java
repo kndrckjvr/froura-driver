@@ -20,6 +20,7 @@ import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerMode;
 import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
 import com.mapbox.services.android.location.LostLocationEngine;
+import com.mapbox.services.android.navigation.ui.v5.NavigationView;
 import com.mapbox.services.android.navigation.ui.v5.NavigationViewOptions;
 import com.mapbox.services.android.telemetry.location.LocationEngine;
 import com.mapbox.services.android.telemetry.location.LocationEngineListener;
@@ -71,6 +72,7 @@ public class NavigationActivity extends AppCompatActivity implements LocationEng
     private NavigationMapRoute navigationMapRoute;
 
     private Button button;
+    private NavigationView navView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,6 +110,7 @@ public class NavigationActivity extends AppCompatActivity implements LocationEng
                         button.setBackgroundResource(R.color.mapboxBlue);
                     };
                 });
+                navView = findViewById(R.id.navigationView);
                 button = findViewById(R.id.startButton);
                 button.setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
@@ -127,6 +130,7 @@ public class NavigationActivity extends AppCompatActivity implements LocationEng
                                 .shouldSimulateRoute(simulateRoute)
                                 .build();
 
+                        navView.setVisibility(View.VISIBLE);
                         // Call this method with Context from within an Activity
                         NavigationLauncher.startNavigation(NavigationActivity.this, options);
                     }
