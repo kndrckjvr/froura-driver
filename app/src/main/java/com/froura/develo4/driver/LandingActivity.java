@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
+import com.froura.develo4.driver.libraries.SnackBarCreator;
+
 public class LandingActivity extends AppCompatActivity {
 
     private Button mobLogin;
@@ -26,5 +28,12 @@ public class LandingActivity extends AppCompatActivity {
                 return;
             }
         });
+
+
+
+        if(getIntent().getIntExtra("loginError", -1) == 1) {
+            SnackBarCreator.set("Sorry! You're not a Driver.");
+            SnackBarCreator.show(mobLogin);
+        }
     }
 }

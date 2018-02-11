@@ -33,14 +33,14 @@
     <style name="CustomNavigationMapRoute" parent="@style/NavigationMapRoute">
 
         <!-- Main color for the route line -->
-        <item name="routeColor">#4882C6</item>
+        <item name="routeColor">#00C853</item>
         <!-- Outline color for the route line -->
-        <item name="routeShieldColor">#2C5F99</item>
+        <item name="routeShieldColor">@color/colorAccent</item>
 
         <!-- Color for moderate traffic along the route line -->
-        <item name="routeModerateCongestionColor">#FFAB65</item>
+        <item name="routeModerateCongestionColor">#FDD835</item>
         <!-- Color for severe traffic along the route line -->
-        <item name="routeSevereCongestionColor">#E85552</item>
+        <item name="routeSevereCongestionColor">#DD2C00</item>
 
         <!-- Scales -->
         <item name="routeScale">1.0</item>

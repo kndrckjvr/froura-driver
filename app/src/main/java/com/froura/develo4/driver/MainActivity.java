@@ -64,20 +64,7 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                                 .show();
                         return;
                     }
-                    final Intent intent = new Intent(MainActivity.this, HomeActivity.class);
-                    DatabaseReference mPassengerDB = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                    mPassengerDB.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                            intent.putExtra("name", map.get("name").toString());
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) { }
-                    });
-
-                    startActivity(intent);
+                    Intent intent = new Intent(MainActivity.this, HomeActivity.class);startActivity(intent);
                     finish();
                     return;
                 }

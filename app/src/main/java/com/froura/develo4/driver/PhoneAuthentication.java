@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.froura.develo4.driver.libraries.RequestPostString;
+import com.froura.develo4.driver.libraries.SnackBarCreator;
 import com.froura.develo4.driver.tasks.CheckUserTasks;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -87,7 +88,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(mAuth.getCurrentUser() != null) {
-                    saveUserDetails();
+                    registerUser();
                     return;
                 }
             }
@@ -162,8 +163,8 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            registerUser();
+                        if(!task.isSuccessful()) {
+                            Log.e("firebaseMobile", task.getException().toString());
                         }
                     }
                 });
@@ -202,14 +203,62 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     }
 
     private void registerUser() {
-        String user_id = mAuth.getCurrentUser().getUid();
-        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
-        dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
-        dbRef.child("email").setValue(email);
-        dbRef.child("mobnum").setValue(mobNum);
-        dbRef.child("auth").setValue(auth);
-        dbRef.child("profile_pic").setValue(profpic);
-        new CheckUserTasks(PhoneAuthentication.this).execute();
+        final String user_id = mAuth.getCurrentUser().getUid();
+        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
+        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                boolean userFound = false;
+                for(DataSnapshot users: dataSnapshot.getChildren()) {
+                    if(users.getKey().equals("passenger")) {
+                        for(DataSnapshot passenger : users.getChildren()) {
+                            if(user_id.equals(passenger.getKey())) {
+                                Log.d("hello", passenger.getKey() + " " + passenger.getValue() + " " + userFound);
+                                userFound = true;
+                                progressDialog.dismiss();
+                                mAuth.signOut();
+                                Intent intent = new Intent(PhoneAuthentication.this, LandingActivity.class);
+                                intent.putExtra("loginError", 1);
+                                startActivity(intent);
+                                finish();
+                                break;
+                            }
+                        }
+                    } else if(users.getKey().equals("driver")){
+                        for(DataSnapshot driver : users.getChildren()) {
+                            if(user_id.equals(driver.getKey())) {
+                                userFound = true;
+                                DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("driver").child(user_id);
+                                dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
+                                dbRef.child("email").setValue(email);
+                                dbRef.child("mobnum").setValue(mobNum);
+                                dbRef.child("auth").setValue(auth);
+                                dbRef.child("profile_pic").setValue(profpic);
+                                saveUserDetails();
+                                new CheckUserTasks(PhoneAuthentication.this).execute();
+                                break;
+                            }
+                        }
+                    }
+                    if(userFound) break;
+                }
+                if(!userFound) {
+                    DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("driver").child(user_id);
+                    dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
+                    dbRef.child("email").setValue(email);
+                    dbRef.child("mobnum").setValue(mobNum);
+                    dbRef.child("auth").setValue(auth);
+                    dbRef.child("profile_pic").setValue(profpic);
+                    saveUserDetails();
+                    new CheckUserTasks(PhoneAuthentication.this).execute();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override

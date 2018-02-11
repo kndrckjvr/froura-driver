@@ -165,7 +165,7 @@ public class MapNavigationActivity extends AppCompatActivity implements Location
                         if (navigationMapRoute != null) {
                             navigationMapRoute.removeRoute();
                         } else {
-                            navigationMapRoute = new NavigationMapRoute(null, mapView, map, R.style.NavigationMapRoute);
+                            navigationMapRoute = new NavigationMapRoute(null, mapView, map, R.style.CustomNavigationMapRoute);
                         }
                         navigationMapRoute.addRoute(currentRoute);
                     }
