@@ -72,7 +72,7 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
             pickupTxtVw = v.findViewById(R.id.pickup);
             dropoffTxtVw = v.findViewById(R.id.dropoff);
             fareTxtVw = v.findViewById(R.id.fare);
-            acceptBtn = v.findViewById(R.id.accepBtn);
+            acceptBtn = v.findViewById(R.id.acceptBtn);
         }
     }
 }
