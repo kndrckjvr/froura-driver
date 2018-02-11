@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.LinearLayout;
@@ -44,10 +45,10 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
 
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
-        holder.pickupTxtVw.setText("Pickup Location: " + mResultList.get(position).getPickup());
-        holder.dropoffTxtVw.setText("Dropoff Location: " +mResultList.get(position).getDropoff());
-        holder.fareTxtVw.setText("Estimated Fare: ₱ " +mResultList.get(position).getFare());
-        holder.rowRecVw.setOnClickListener(new View.OnClickListener() {
+        holder.pickupTxtVw.setText(mResultList.get(position).getPickup());
+        holder.dropoffTxtVw.setText(mResultList.get(position).getDropoff());
+        holder.fareTxtVw.setText("Fare: ₱ " +mResultList.get(position).getFare());
+        holder.acceptBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mListener.onBookingClick(mResultList, position);
@@ -64,14 +65,14 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
         public TextView pickupTxtVw;
         public TextView dropoffTxtVw;
         public TextView fareTxtVw;
-        public LinearLayout rowRecVw;
+        public Button acceptBtn;
 
         public ViewHolder(View v) {
             super(v);
             pickupTxtVw = v.findViewById(R.id.pickup);
             dropoffTxtVw = v.findViewById(R.id.dropoff);
             fareTxtVw = v.findViewById(R.id.fare);
-            rowRecVw = v.findViewById(R.id.rowRec);
+            acceptBtn = v.findViewById(R.id.accepBtn);
         }
     }
 }

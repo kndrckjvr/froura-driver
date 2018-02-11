@@ -1,36 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/rowRec"
-    android:clickable="true"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="#fff"
+    android:clickable="true"
+    android:orientation="horizontal"
     android:padding="10dp">
 
-    <TextView
-        android:id="@+id/pickup"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:paddingBottom="10dp"
-        android:text="Pickup Location: 9 Gold St"
-        android:textColor="#000" />
-
-    <TextView
-        android:id="@+id/dropoff"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:paddingBottom="10dp"
-        android:text="Dropoff Location: SM City Novaliches"
-        android:textColor="#000"/>
-
-    <TextView
-        android:id="@+id/fare"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_weight="1"
-        android:text="Estimated Fare: ₱ 169.67"
-        android:textColor="#000" />
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/pickup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:drawableLeft="@drawable/ic_pin_yellow_24dp"
+            android:padding="5dp"
+            android:text="Pickup:"
+            android:textColor="#000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/dropoff"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:drawableLeft="@drawable/ic_pin_black_24dp"
+            android:padding="5dp"
+            android:text="Dropoff:"
+            android:textColor="#000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/fare"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/ic_peso_black_24dp"
+            android:padding="5dp"
+            android:text="Estimated Fare:"
+            android:textColor="#000"
+            android:textSize="16sp" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/accepBtn"
+        style="@style/Widget.AppCompat.Button.Borderless.Colored"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="0"
+        android:text="ACCEPT" />
 
 </LinearLayout>

@@ -33,16 +33,30 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Not Working" />
+                android:text="Off-Duty" />
         </LinearLayout>
+
+        <View
+            android:layout_below="@+id/adapter"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:clickable="false"
+            android:background="#454545"/>
+
+        <android.support.v4.widget.SwipeRefreshLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/swiperefresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/bookList"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="0">
+            android:scrollbars="vertical"
+            android:layout_weight="0" />
 
-        </android.support.v7.widget.RecyclerView>
+        </android.support.v4.widget.SwipeRefreshLayout>
 
     </LinearLayout>
 </FrameLayout>
