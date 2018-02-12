@@ -124,7 +124,7 @@ public class HomeActivity extends AppCompatActivity
             public void onDataChange(DataSnapshot dataSnapshot) {
                 BookingServicesAdapter.mResultList.clear();
                 int count = 0;
-                if(dataSnapshot != null && isWorking)
+                if(dataSnapshot != null && isWorking) {
                     for(DataSnapshot uniqueKeySnapshot : dataSnapshot.getChildren()){
                         String passId;
                         String pickup = "";
@@ -186,6 +186,11 @@ public class HomeActivity extends AppCompatActivity
                             count++;
                         }
                     }
+                } else if(dataSnapshot == null) {
+                    Toast.makeText(HomeActivity.this, "data == null", Toast.LENGTH_SHORT).show();
+                    BookingServicesAdapter.mResultList.clear();
+                    mAdapter.notifyDataSetChanged();
+                }
             }
 
             @Override
@@ -276,7 +281,15 @@ public class HomeActivity extends AppCompatActivity
                             count++;
                         }
                     }
+                } else if(dataSnapshot == null) {
+                    Toast.makeText(HomeActivity.this, "data == null", Toast.LENGTH_SHORT).show();
+                    BookingServicesAdapter.mResultList.clear();
+                    mAdapter.notifyDataSetChanged();
+                    SnackBarCreator.set("No Bookings Found.");
+                    SnackBarCreator.show(bookingList);
+                    refreshLayout.setRefreshing(false);
                 } else {
+                    Toast.makeText(HomeActivity.this, "working == false", Toast.LENGTH_SHORT).show();
                     SnackBarCreator.set("You're Off-Duty.");
                     SnackBarCreator.show(bookingList);
                     refreshLayout.setRefreshing(false);
@@ -292,7 +305,7 @@ public class HomeActivity extends AppCompatActivity
 
     private void removeNearest(String passId) {
         DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" + passId);
-        dbref.child("nearest_driver").setValue("null");
+        dbref.child("nearest_driver").setValue(null);
     }
 
     private void setJob(int pos) {
