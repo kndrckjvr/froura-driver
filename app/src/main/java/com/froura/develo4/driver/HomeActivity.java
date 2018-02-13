@@ -181,7 +181,7 @@ public class HomeActivity extends AppCompatActivity
                                 }
                             }
                             BookingServicesAdapter.mResultList.add(new BookingObject(passId, pickup, dropoff, fare, pickupLocation, dropoffLocation));
-                            if(nearJobFound) setJob(count);
+                            if(nearJobFound) setJob(count, true);
                             mAdapter.notifyDataSetChanged();
                             count++;
                         }
@@ -276,7 +276,7 @@ public class HomeActivity extends AppCompatActivity
                                 }
                             }
                             BookingServicesAdapter.mResultList.add(new BookingObject(passId, pickup, dropoff, fare, pickupLocation, dropoffLocation));
-                            if(nearJobFound) setJob(count);
+                            if(nearJobFound) setJob(count, true);
                             mAdapter.notifyDataSetChanged();
                             count++;
                         }
@@ -308,7 +308,13 @@ public class HomeActivity extends AppCompatActivity
         dbref.child("nearest_driver").setValue(null);
     }
 
-    private void setJob(int pos) {
+    private void acceptJob(String passId) {
+        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" + passId);
+        dbref.child("accepted_by").setValue(uid);
+        removeNearest(passId);
+    }
+
+    private void setJob(int pos, final boolean auto) {
         final BookingObject bookingdetails = BookingServicesAdapter.mResultList.get(pos);
 
         View mView = getLayoutInflater().inflate(R.layout.nearjob_dialog, null);
@@ -325,14 +331,16 @@ public class HomeActivity extends AppCompatActivity
         acceptBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                dialog.dismiss();
+                acceptJob(bookingdetails.getUid());
             }
         });
 
         declineBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                removeNearest(bookingdetails.getUid());
+                if(auto)
+                    removeNearest(bookingdetails.getUid());
                 dialog.dismiss();
             }
         });
@@ -413,7 +421,7 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onBookingClick(ArrayList<BookingObject> mResultList, int position) {
-        setJob(position);
+        setJob(position, false);
     }
 
     @Override
