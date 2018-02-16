@@ -6,9 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Filter;
-import android.widget.Filterable;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.froura.develo4.driver.R;
@@ -32,7 +29,7 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
     }
 
     public interface BookingServicesInterface {
-        public void onBookingClick(ArrayList<BookingObject> mResultList, int position);
+        void onBookingClick(ArrayList<BookingObject> mResultList, int position);
     }
 
     @Override

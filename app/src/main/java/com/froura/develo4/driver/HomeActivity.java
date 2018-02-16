@@ -25,6 +25,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -59,10 +60,10 @@ import java.util.List;
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         DialogCreator.DialogActionListener,
-        BookingServicesAdapter.BookingServicesInterface,
-        LocationEngineListener, PermissionsListener {
+        BookingServicesAdapter.BookingServicesInterface {
 
     private DrawerLayout drawer;
+    private RelativeLayout emptyView;
     private RecyclerView bookingList;
     private BookingServicesAdapter mAdapter;
     private ArrayList<BookingObject> mResultList;
@@ -71,11 +72,6 @@ public class HomeActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     final int LOCATION_REQUEST_CODE = 1;
-
-    private PermissionsManager permissionsManager;
-    private LocationLayerPlugin locationPlugin;
-    private LocationEngine locationEngine;
-    private Location originLocation;
 
     private Switch working;
     private String uid;
@@ -91,6 +87,7 @@ public class HomeActivity extends AppCompatActivity
 
         uid = FirebaseAuth.getInstance().getUid();
         refreshLayout = findViewById(R.id.swiperefresh);
+        emptyView = findViewById(R.id.emptyView);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -186,11 +183,11 @@ public class HomeActivity extends AppCompatActivity
                             count++;
                         }
                     }
-                } else if(dataSnapshot == null) {
-                    Toast.makeText(HomeActivity.this, "data == null", Toast.LENGTH_SHORT).show();
+                } else {
                     BookingServicesAdapter.mResultList.clear();
                     mAdapter.notifyDataSetChanged();
                 }
+                checkData();
             }
 
             @Override
@@ -204,7 +201,6 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
-        enableLocationPlugin();
         mAdapter = new BookingServicesAdapter(this, this);
         bookingList.setAdapter(mAdapter);
         bookingList.setHasFixedSize(true);
@@ -218,82 +214,87 @@ public class HomeActivity extends AppCompatActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 BookingServicesAdapter.mResultList.clear();
-                if (dataSnapshot != null && isWorking) {
-                    int count = 0;
-                    for (DataSnapshot uniqueKeySnapshot : dataSnapshot.getChildren()) {
-                        String passId;
-                        String pickup = "";
-                        String dropoff = "";
-                        String fare = "";
-                        LatLng pickupLocation = new LatLng(0, 0);
-                        LatLng dropoffLocation = new LatLng(0, 0);
-                        for(DataSnapshot passengerSnapshot : uniqueKeySnapshot.getChildren()){
-                            boolean nearJobFound = false;
-                            passId = passengerSnapshot.getKey();
-                            for(DataSnapshot bookingDetailsSnapshot: passengerSnapshot.getChildren()) {
-                                if(bookingDetailsSnapshot.getKey().equals("pickupName")) {
-                                    pickup = bookingDetailsSnapshot.getValue().toString();
-                                }
+                if (dataSnapshot.getValue() != null) {
+                    if(isWorking) {
+                        int count = 0;
+                        for (DataSnapshot uniqueKeySnapshot : dataSnapshot.getChildren()) {
+                            String passId;
+                            String pickup = "";
+                            String dropoff = "";
+                            String fare = "";
+                            LatLng pickupLocation = new LatLng(0, 0);
+                            LatLng dropoffLocation = new LatLng(0, 0);
+                            for(DataSnapshot passengerSnapshot : uniqueKeySnapshot.getChildren()){
+                                boolean nearJobFound = false;
+                                passId = passengerSnapshot.getKey();
+                                for(DataSnapshot bookingDetailsSnapshot: passengerSnapshot.getChildren()) {
+                                    if(bookingDetailsSnapshot.getKey().equals("pickupName")) {
+                                        pickup = bookingDetailsSnapshot.getValue().toString();
+                                    }
 
-                                if(bookingDetailsSnapshot.getKey().equals("dropoffName")) {
-                                    dropoff = bookingDetailsSnapshot.getValue().toString();
-                                }
+                                    if(bookingDetailsSnapshot.getKey().equals("dropoffName")) {
+                                        dropoff = bookingDetailsSnapshot.getValue().toString();
+                                    }
 
-                                if(bookingDetailsSnapshot.getKey().equals("fare")) {
-                                    fare = bookingDetailsSnapshot.getValue().toString();
-                                }
+                                    if(bookingDetailsSnapshot.getKey().equals("fare")) {
+                                        fare = bookingDetailsSnapshot.getValue().toString();
+                                    }
 
-                                if(bookingDetailsSnapshot.getKey().equals("pickupLocation")) {
-                                    double lat = 0.0;
-                                    double lng = 0.0;
-                                    for(DataSnapshot locationDetails: bookingDetailsSnapshot.getChildren()) {
-                                        if(locationDetails.getKey().equals("0")) {
-                                            lat = Double.parseDouble(locationDetails.getValue().toString());
-                                        } else {
-                                            lng = Double.parseDouble(locationDetails.getValue().toString());
+                                    if(bookingDetailsSnapshot.getKey().equals("pickupLocation")) {
+                                        double lat = 0.0;
+                                        double lng = 0.0;
+                                        for(DataSnapshot locationDetails: bookingDetailsSnapshot.getChildren()) {
+                                            if(locationDetails.getKey().equals("0")) {
+                                                lat = Double.parseDouble(locationDetails.getValue().toString());
+                                            } else {
+                                                lng = Double.parseDouble(locationDetails.getValue().toString());
+                                            }
+                                            pickupLocation = new LatLng(lat, lng);
                                         }
-                                        pickupLocation = new LatLng(lat, lng);
                                     }
-                                }
 
-                                if(bookingDetailsSnapshot.getKey().equals("dropoffLocation")) {
-                                    double lat = 0.0;
-                                    double lng = 0.0;
-                                    for(DataSnapshot locationDetails: bookingDetailsSnapshot.getChildren()) {
-                                        if(locationDetails.getKey().equals("0")) {
-                                            lat = Double.parseDouble(locationDetails.getValue().toString());
-                                        } else {
-                                            lng = Double.parseDouble(locationDetails.getValue().toString());
+                                    if(bookingDetailsSnapshot.getKey().equals("dropoffLocation")) {
+                                        double lat = 0.0;
+                                        double lng = 0.0;
+                                        for(DataSnapshot locationDetails: bookingDetailsSnapshot.getChildren()) {
+                                            if(locationDetails.getKey().equals("0")) {
+                                                lat = Double.parseDouble(locationDetails.getValue().toString());
+                                            } else {
+                                                lng = Double.parseDouble(locationDetails.getValue().toString());
+                                            }
+                                            dropoffLocation = new LatLng(lat, lng);
                                         }
-                                        dropoffLocation = new LatLng(lat, lng);
                                     }
-                                }
 
-                                if(bookingDetailsSnapshot.getKey().equals("nearest_driver")) {
-                                    if(bookingDetailsSnapshot.getValue().equals(uid)) {
-                                        nearJobFound = true;
+                                    if(bookingDetailsSnapshot.getKey().equals("nearest_driver")) {
+                                        if(bookingDetailsSnapshot.getValue().equals(uid)) {
+                                            nearJobFound = true;
+                                        }
                                     }
                                 }
+                                BookingServicesAdapter.mResultList.add(new BookingObject(passId, pickup, dropoff, fare, pickupLocation, dropoffLocation));
+                                if(nearJobFound) setJob(count, true);
+                                mAdapter.notifyDataSetChanged();
+                                count++;
                             }
-                            BookingServicesAdapter.mResultList.add(new BookingObject(passId, pickup, dropoff, fare, pickupLocation, dropoffLocation));
-                            if(nearJobFound) setJob(count, true);
-                            mAdapter.notifyDataSetChanged();
-                            count++;
                         }
+                        refreshLayout.setRefreshing(false);
+                    } else {
+                        SnackBarCreator.set("You're Off-Duty.");
+                        SnackBarCreator.show(bookingList);
+                        refreshLayout.setRefreshing(false);
                     }
-                } else if(dataSnapshot == null) {
-                    Toast.makeText(HomeActivity.this, "data == null", Toast.LENGTH_SHORT).show();
+                } else {
                     BookingServicesAdapter.mResultList.clear();
                     mAdapter.notifyDataSetChanged();
-                    SnackBarCreator.set("No Bookings Found.");
-                    SnackBarCreator.show(bookingList);
-                    refreshLayout.setRefreshing(false);
-                } else {
-                    Toast.makeText(HomeActivity.this, "working == false", Toast.LENGTH_SHORT).show();
-                    SnackBarCreator.set("You're Off-Duty.");
+                    if(isWorking)
+                        SnackBarCreator.set("No Bookings Found.");
+                    else
+                        SnackBarCreator.set("You're Off-Duty.");
                     SnackBarCreator.show(bookingList);
                     refreshLayout.setRefreshing(false);
                 }
+                checkData();
             }
 
             @Override
@@ -301,6 +302,12 @@ public class HomeActivity extends AppCompatActivity
 
             }
         });
+    }
+
+    private void checkData() {
+        boolean isEmpty = BookingServicesAdapter.mResultList.size() <= 0;
+        bookingList.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        emptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
     private void removeNearest(String passId) {
@@ -362,61 +369,6 @@ public class HomeActivity extends AppCompatActivity
             }
         };
         timer.start();
-    }
-
-    @Override
-    @SuppressWarnings( {"MissingPermission"})
-    public void onConnected() {
-        locationEngine.requestLocationUpdates();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        if (location != null) {
-            originLocation = location;
-
-            DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
-            GeoFire geoFire = new GeoFire(driversAvailable);
-            geoFire.setLocation(uid, new GeoLocation(location.getLatitude(), location.getLongitude()));
-        }
-    }
-
-    @Override
-    public void onExplanationNeeded(List<String> permissionsToExplain) {
-
-    }
-
-    @Override
-    public void onPermissionResult(boolean granted) {
-        if (granted) {
-            enableLocationPlugin();
-        } else {
-            finish();
-        }
-    }
-
-    @SuppressWarnings( {"MissingPermission"})
-    private void initializeLocationEngine() {
-        locationEngine = new LostLocationEngine(HomeActivity.this);
-        locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-        locationEngine.activate();
-
-        Location lastLocation = locationEngine.getLastLocation();
-        if (lastLocation != null) {
-            originLocation = lastLocation;
-        } else {
-            locationEngine.addLocationEngineListener(this);
-        }
-    }
-
-    @SuppressWarnings( {"MissingPermission"})
-    private void enableLocationPlugin() {
-        if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            initializeLocationEngine();
-        } else {
-            permissionsManager = new PermissionsManager(this);
-            permissionsManager.requestLocationPermissions(this);
-        }
     }
 
     @Override
@@ -488,11 +440,11 @@ public class HomeActivity extends AppCompatActivity
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
+
                 } else {
                     finish();
                 }
                 break;
         }
-        permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 }
