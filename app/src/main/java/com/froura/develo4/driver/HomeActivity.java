@@ -60,7 +60,8 @@ import java.util.List;
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         DialogCreator.DialogActionListener,
-        BookingServicesAdapter.BookingServicesInterface {
+        BookingServicesAdapter.BookingServicesInterface,
+        LocationEngineListener, PermissionsListener {
 
     private DrawerLayout drawer;
     private RelativeLayout emptyView;
@@ -72,6 +73,12 @@ public class HomeActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     final int LOCATION_REQUEST_CODE = 1;
+
+
+    private PermissionsManager permissionsManager;
+    private LocationLayerPlugin locationPlugin;
+    private LocationEngine locationEngine;
+    private Location originLocation;
 
     private Switch working;
     private String uid;
@@ -369,6 +376,61 @@ public class HomeActivity extends AppCompatActivity
             }
         };
         timer.start();
+    }
+
+    @Override
+    @SuppressWarnings( {"MissingPermission"})
+    public void onConnected() {
+        locationEngine.requestLocationUpdates();
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        if (location != null) {
+            originLocation = location;
+
+            DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
+            GeoFire geoFire = new GeoFire(driversAvailable);
+            geoFire.setLocation(uid, new GeoLocation(location.getLatitude(), location.getLongitude()));
+        }
+    }
+
+    @Override
+    public void onExplanationNeeded(List<String> permissionsToExplain) {
+
+    }
+
+    @Override
+    public void onPermissionResult(boolean granted) {
+        if (granted) {
+            enableLocationPlugin();
+        } else {
+            finish();
+        }
+    }
+
+    @SuppressWarnings( {"MissingPermission"})
+    private void initializeLocationEngine() {
+        locationEngine = new LostLocationEngine(HomeActivity.this);
+        locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
+        locationEngine.activate();
+
+        Location lastLocation = locationEngine.getLastLocation();
+        if (lastLocation != null) {
+            originLocation = lastLocation;
+        } else {
+            locationEngine.addLocationEngineListener(this);
+        }
+    }
+
+    @SuppressWarnings( {"MissingPermission"})
+    private void enableLocationPlugin() {
+        if (PermissionsManager.areLocationPermissionsGranted(this)) {
+            initializeLocationEngine();
+        } else {
+            permissionsManager = new PermissionsManager(this);
+            permissionsManager.requestLocationPermissions(this);
+        }
     }
 
     @Override

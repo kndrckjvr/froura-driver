@@ -21,7 +21,12 @@
             android:layout_weight="1"
             android:drawableLeft="@drawable/ic_pin_yellow_24dp"
             android:padding="5dp"
-            android:text="Pickup:"
+            android:text="University of the East, Manila Campus"
+            android:ellipsize="marquee"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
             android:textColor="#000"
             android:textSize="16sp" />
 
@@ -32,7 +37,12 @@
             android:layout_weight="1"
             android:drawableLeft="@drawable/ic_pin_black_24dp"
             android:padding="5dp"
-            android:text="Dropoff:"
+            android:text="Malabon"
+            android:ellipsize="marquee"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:singleLine="true"
             android:textColor="#000"
             android:textSize="16sp" />
 
@@ -42,7 +52,7 @@
             android:layout_height="wrap_content"
             android:drawableLeft="@drawable/ic_peso_black_24dp"
             android:padding="5dp"
-            android:text="Estimated Fare:"
+            android:text="Fare:"
             android:textColor="#000"
             android:textSize="16sp" />
 

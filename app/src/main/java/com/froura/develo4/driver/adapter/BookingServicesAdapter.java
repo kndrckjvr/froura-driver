@@ -44,6 +44,8 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
     public void onBindViewHolder(ViewHolder holder, final int position) {
         holder.pickupTxtVw.setText(mResultList.get(position).getPickup());
         holder.dropoffTxtVw.setText(mResultList.get(position).getDropoff());
+        holder.pickupTxtVw.setSelected(true);
+        holder.dropoffTxtVw.setSelected(true);
         holder.fareTxtVw.setText("Fare: ₱ " +mResultList.get(position).getFare());
         holder.acceptBtn.setOnClickListener(new View.OnClickListener() {
             @Override
