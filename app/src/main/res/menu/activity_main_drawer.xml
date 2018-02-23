@@ -13,6 +13,10 @@
             android:icon="@drawable/ic_history_black_24dp"
             android:title="History" />
         <item
+            android:id="@+id/leave"
+            android:icon="@drawable/ic_file_black_24dp"
+            android:title="Leave / Absences" />
+        <item
             android:id="@+id/profile"
             android:icon="@drawable/ic_account_circle_black_24dp"
             android:title="Profile" />
