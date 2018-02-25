@@ -84,6 +84,7 @@ public class HomeActivity extends AppCompatActivity
     private String uid;
 
     private boolean isWorking = false;
+    //private ValueEventListener jobFind;
 
     private SwipeRefreshLayout refreshLayout;
 
@@ -97,6 +98,7 @@ public class HomeActivity extends AppCompatActivity
         emptyView = findViewById(R.id.emptyView);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        enableLocationPlugin();
 
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -113,213 +115,24 @@ public class HomeActivity extends AppCompatActivity
             public void onClick(View view) {
                 isWorking = !isWorking;
                 working.setText(isWorking ? "On-Duty" : "Off-Duty");
-                if(!isWorking) {
-                    BookingServicesAdapter.mResultList.clear();
-                    mAdapter.notifyDataSetChanged();
+                if(isWorking) {
+                    mAdapter = new BookingServicesAdapter(HomeActivity.this, HomeActivity.this);
+                    bookingList.setAdapter(mAdapter);
                 } else {
-                    refreshBookings();
+                    bookingList.setAdapter(null);
                 }
             }
         });
         bookingList = findViewById(R.id.bookList);
         bookRef = FirebaseDatabase.getInstance().getReference("services");
-        bookRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                BookingServicesAdapter.mResultList.clear();
-                int count = 0;
-                if(dataSnapshot != null && isWorking) {
-                    for(DataSnapshot uniqueKeySnapshot : dataSnapshot.getChildren()){
-                        String passId;
-                        String pickup = "";
-                        String dropoff = "";
-                        String fare = "";
-                        LatLng pickupLocation = new LatLng(0, 0);
-                        LatLng dropoffLocation = new LatLng(0, 0);
-                        for(DataSnapshot passengerSnapshot : uniqueKeySnapshot.getChildren()){
-                            boolean nearJobFound = false;
-                            passId = passengerSnapshot.getKey();
-                            for(DataSnapshot bookingDetailsSnapshot: passengerSnapshot.getChildren()) {
-                                if(bookingDetailsSnapshot.getKey().equals("pickupName")) {
-                                    pickup = bookingDetailsSnapshot.getValue().toString();
-                                }
-
-                                if(bookingDetailsSnapshot.getKey().equals("dropoffName")) {
-                                    dropoff = bookingDetailsSnapshot.getValue().toString();
-                                }
-
-                                if(bookingDetailsSnapshot.getKey().equals("fare")) {
-                                    fare = bookingDetailsSnapshot.getValue().toString();
-                                }
-
-                                if(bookingDetailsSnapshot.getKey().equals("pickupLocation")) {
-                                    double lat = 0.0;
-                                    double lng = 0.0;
-                                    for(DataSnapshot locationDetails: bookingDetailsSnapshot.getChildren()) {
-                                        if(locationDetails.getKey().equals("0")) {
-                                            lat = Double.parseDouble(locationDetails.getValue().toString());
-                                        } else {
-                                            lng = Double.parseDouble(locationDetails.getValue().toString());
-                                        }
-                                        pickupLocation = new LatLng(lat, lng);
-                                    }
-                                }
-
-                                if(bookingDetailsSnapshot.getKey().equals("dropoffLocation")) {
-                                    double lat = 0.0;
-                                    double lng = 0.0;
-                                    for(DataSnapshot locationDetails: bookingDetailsSnapshot.getChildren()) {
-                                        if(locationDetails.getKey().equals("0")) {
-                                            lat = Double.parseDouble(locationDetails.getValue().toString());
-                                        } else {
-                                            lng = Double.parseDouble(locationDetails.getValue().toString());
-                                        }
-                                        dropoffLocation = new LatLng(lat, lng);
-                                    }
-                                }
-
-                                if(bookingDetailsSnapshot.getKey().equals("nearest_driver")) {
-                                    if(bookingDetailsSnapshot.getValue().equals(uid)) {
-                                        nearJobFound = true;
-                                    }
-                                }
-                            }
-                            BookingServicesAdapter.mResultList.add(new BookingObject(passId, pickup, dropoff, fare, pickupLocation, dropoffLocation));
-                            if(nearJobFound) setJob(count, true);
-                            mAdapter.notifyDataSetChanged();
-                            count++;
-                        }
-                    }
-                } else {
-                    BookingServicesAdapter.mResultList.clear();
-                    mAdapter.notifyDataSetChanged();
-                }
-                checkData();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) { }
-        });
-
-        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshBookings();
-            }
-        });
-
-        mAdapter = new BookingServicesAdapter(this, this);
-        bookingList.setAdapter(mAdapter);
         bookingList.setHasFixedSize(true);
         bookingList.setLayoutManager(new LinearLayoutManager(this));
         bookingList.addItemDecoration(new SimpleDividerItemDecoration(this));
-
-    }
-
-    private void refreshBookings() {
-        bookRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                BookingServicesAdapter.mResultList.clear();
-                if (dataSnapshot.getValue() != null) {
-                    if(isWorking) {
-                        int count = 0;
-                        for (DataSnapshot uniqueKeySnapshot : dataSnapshot.getChildren()) {
-                            String passId;
-                            String pickup = "";
-                            String dropoff = "";
-                            String fare = "";
-                            LatLng pickupLocation = new LatLng(0, 0);
-                            LatLng dropoffLocation = new LatLng(0, 0);
-                            for(DataSnapshot passengerSnapshot : uniqueKeySnapshot.getChildren()){
-                                boolean nearJobFound = false;
-                                passId = passengerSnapshot.getKey();
-                                for(DataSnapshot bookingDetailsSnapshot: passengerSnapshot.getChildren()) {
-                                    if(bookingDetailsSnapshot.getKey().equals("pickupName")) {
-                                        pickup = bookingDetailsSnapshot.getValue().toString();
-                                    }
-
-                                    if(bookingDetailsSnapshot.getKey().equals("dropoffName")) {
-                                        dropoff = bookingDetailsSnapshot.getValue().toString();
-                                    }
-
-                                    if(bookingDetailsSnapshot.getKey().equals("fare")) {
-                                        fare = bookingDetailsSnapshot.getValue().toString();
-                                    }
-
-                                    if(bookingDetailsSnapshot.getKey().equals("pickupLocation")) {
-                                        double lat = 0.0;
-                                        double lng = 0.0;
-                                        for(DataSnapshot locationDetails: bookingDetailsSnapshot.getChildren()) {
-                                            if(locationDetails.getKey().equals("0")) {
-                                                lat = Double.parseDouble(locationDetails.getValue().toString());
-                                            } else {
-                                                lng = Double.parseDouble(locationDetails.getValue().toString());
-                                            }
-                                            pickupLocation = new LatLng(lat, lng);
-                                        }
-                                    }
-
-                                    if(bookingDetailsSnapshot.getKey().equals("dropoffLocation")) {
-                                        double lat = 0.0;
-                                        double lng = 0.0;
-                                        for(DataSnapshot locationDetails: bookingDetailsSnapshot.getChildren()) {
-                                            if(locationDetails.getKey().equals("0")) {
-                                                lat = Double.parseDouble(locationDetails.getValue().toString());
-                                            } else {
-                                                lng = Double.parseDouble(locationDetails.getValue().toString());
-                                            }
-                                            dropoffLocation = new LatLng(lat, lng);
-                                        }
-                                    }
-
-                                    if(bookingDetailsSnapshot.getKey().equals("nearest_driver")) {
-                                        if(bookingDetailsSnapshot.getValue().equals(uid)) {
-                                            nearJobFound = true;
-                                        }
-                                    }
-                                }
-                                BookingServicesAdapter.mResultList.add(new BookingObject(passId, pickup, dropoff, fare, pickupLocation, dropoffLocation));
-                                if(nearJobFound) setJob(count, true);
-                                mAdapter.notifyDataSetChanged();
-                                count++;
-                            }
-                        }
-                        refreshLayout.setRefreshing(false);
-                    } else {
-                        SnackBarCreator.set("You're Off-Duty.");
-                        SnackBarCreator.show(bookingList);
-                        refreshLayout.setRefreshing(false);
-                    }
-                } else {
-                    BookingServicesAdapter.mResultList.clear();
-                    mAdapter.notifyDataSetChanged();
-                    if(isWorking)
-                        SnackBarCreator.set("No Bookings Found.");
-                    else
-                        SnackBarCreator.set("You're Off-Duty.");
-                    SnackBarCreator.show(bookingList);
-                    refreshLayout.setRefreshing(false);
-                }
-                checkData();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void checkData() {
-        boolean isEmpty = BookingServicesAdapter.mResultList.size() <= 0;
-        bookingList.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
-        emptyView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
     private void removeNearest(String passId) {
         DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" + passId);
-        dbref.child("nearest_driver").setValue(null);
+        dbref.child("nearest_driver").setValue("null");
     }
 
     private void acceptJob(String passId) {
@@ -328,7 +141,7 @@ public class HomeActivity extends AppCompatActivity
         removeNearest(passId);
     }
 
-    private void setJob(int pos, final boolean auto) {
+    /*private void nearJob(int pos) {
         final BookingObject bookingdetails = BookingServicesAdapter.mResultList.get(pos);
 
         View mView = getLayoutInflater().inflate(R.layout.nearjob_dialog, null);
@@ -376,7 +189,7 @@ public class HomeActivity extends AppCompatActivity
             }
         };
         timer.start();
-    }
+    }*/
 
     @Override
     @SuppressWarnings( {"MissingPermission"})
@@ -386,12 +199,13 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
+        DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
+        GeoFire geoFire = new GeoFire(driversAvailable);
         if (location != null) {
             originLocation = location;
-
-            DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
-            GeoFire geoFire = new GeoFire(driversAvailable);
-            geoFire.setLocation(uid, new GeoLocation(location.getLatitude(), location.getLongitude()));
+            if(isWorking) {
+                geoFire.setLocation(uid, new GeoLocation(location.getLatitude(), location.getLongitude()));
+            }
         }
     }
 
@@ -435,7 +249,7 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onBookingClick(ArrayList<BookingObject> mResultList, int position) {
-        setJob(position, false);
+        //nearJob(position, false);
     }
 
     @Override
@@ -494,19 +308,4 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onCreateDialogView(String actionId, View view) { }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case LOCATION_REQUEST_CODE:
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-
-                } else {
-                    finish();
-                }
-                break;
-        }
-    }
 }

@@ -213,7 +213,6 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                     if(users.getKey().equals("passenger")) {
                         for(DataSnapshot passenger : users.getChildren()) {
                             if(user_id.equals(passenger.getKey())) {
-                                Log.d("hello", passenger.getKey() + " " + passenger.getValue() + " " + userFound);
                                 userFound = true;
                                 progressDialog.dismiss();
                                 mAuth.signOut();
