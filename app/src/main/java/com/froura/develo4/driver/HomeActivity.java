@@ -67,7 +67,6 @@ public class HomeActivity extends AppCompatActivity
     private RelativeLayout emptyView;
     private RecyclerView bookingList;
     private BookingServicesAdapter mAdapter;
-    private ArrayList<BookingObject> mResultList;
     private DatabaseReference bookRef;
 
     private GoogleApiClient mGoogleApiClient;
@@ -128,6 +127,7 @@ public class HomeActivity extends AppCompatActivity
         bookingList.setHasFixedSize(true);
         bookingList.setLayoutManager(new LinearLayoutManager(this));
         bookingList.addItemDecoration(new SimpleDividerItemDecoration(this));
+        nearJobListener();
     }
 
     private void removeNearest(String passId) {
@@ -141,7 +141,77 @@ public class HomeActivity extends AppCompatActivity
         removeNearest(passId);
     }
 
-    /*private void nearJob(int pos) {
+    private void nearJobListener() {
+        DatabaseReference bookingRef = FirebaseDatabase.getInstance().getReference("services");
+        bookingRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                BookingServicesAdapter.mResultList.clear();
+                for(DataSnapshot booking : dataSnapshot.getChildren()) {
+                    int count = 0;
+                    for (DataSnapshot pssngrid : booking.getChildren()) {
+                        String pass_id = pssngrid.getKey().toString();
+                        LatLng dropoffLoc = new LatLng();
+                        String dropoffName = "";
+                        LatLng pickupLoc = new LatLng();
+                        String pickupName = "";
+                        String fare = "";
+                        for(DataSnapshot bookingDetails : pssngrid.getChildren()) {
+                            switch (bookingDetails.getKey()) {
+                                case "dropoff":
+                                    for(DataSnapshot dropoffDetails : bookingDetails.getChildren()) {
+                                        switch (dropoffDetails.getKey()) {
+                                            case "lat":
+                                                dropoffLoc.setLatitude(Double.parseDouble(dropoffDetails.getValue().toString()));
+                                                break;
+                                            case "lng":
+                                                dropoffLoc.setLongitude(Double.parseDouble(dropoffDetails.getValue().toString()));
+                                                break;
+                                            case "name":
+                                                dropoffName = dropoffDetails.getValue().toString();
+                                                break;
+                                        }
+                                    }
+                                    break;
+                                case "pickup":
+                                    for(DataSnapshot pickupDetails : bookingDetails.getChildren()) {
+                                        switch (pickupDetails.getKey()) {
+                                            case "lat":
+                                                pickupLoc.setLatitude(Double.parseDouble(pickupDetails.getValue().toString()));
+                                                break;
+                                            case "lng":
+                                                pickupLoc.setLongitude(Double.parseDouble(pickupDetails.getValue().toString()));
+                                                break;
+                                            case "name":
+                                                pickupName = pickupDetails.getValue().toString();
+                                                break;
+                                        }
+                                    }
+                                    break;
+                                case "fare":
+                                    fare = bookingDetails.getValue().toString();
+                                    break;
+                                case "nearby_driver":
+                                    if(uid.equals(booking.getValue().toString()))
+                                        nearJob(count);
+                                    break;
+                            }
+                        }
+                        BookingServicesAdapter.mResultList.add(new BookingObject(pass_id, pickupName, dropoffName, fare, pickupLoc, dropoffLoc));
+                        mAdapter.notifyDataSetChanged();
+                        count++;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void nearJob(int pos) {
         final BookingObject bookingdetails = BookingServicesAdapter.mResultList.get(pos);
 
         View mView = getLayoutInflater().inflate(R.layout.nearjob_dialog, null);
@@ -158,17 +228,14 @@ public class HomeActivity extends AppCompatActivity
         acceptBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                dialog.dismiss();
-                acceptJob(bookingdetails.getUid());
+
             }
         });
 
         declineBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(auto)
-                    removeNearest(bookingdetails.getUid());
-                dialog.dismiss();
+
             }
         });
         pickup.setText(bookingdetails.getPickup());
@@ -189,7 +256,7 @@ public class HomeActivity extends AppCompatActivity
             }
         };
         timer.start();
-    }*/
+    }
 
     @Override
     @SuppressWarnings( {"MissingPermission"})
