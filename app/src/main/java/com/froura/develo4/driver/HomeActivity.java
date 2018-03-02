@@ -2,9 +2,7 @@ package com.froura.develo4.driver;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
@@ -20,7 +18,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -28,14 +25,12 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.froura.develo4.driver.adapter.BookingServicesAdapter;
 import com.froura.develo4.driver.adapter.SimpleDividerItemDecoration;
 import com.froura.develo4.driver.libraries.DialogCreator;
-import com.froura.develo4.driver.libraries.SnackBarCreator;
 import com.froura.develo4.driver.objects.BookingObject;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
@@ -45,7 +40,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerMode;
 import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
 import com.mapbox.services.android.location.LostLocationEngine;
 import com.mapbox.services.android.telemetry.location.LocationEngine;
@@ -193,7 +187,7 @@ public class HomeActivity extends AppCompatActivity
                                     break;
                                 case "nearby_driver":
                                     if(uid.equals(booking.getValue().toString()))
-                                        nearJob(count);
+                                        job_near(count);
                                     break;
                             }
                         }
@@ -211,10 +205,10 @@ public class HomeActivity extends AppCompatActivity
         });
     }
 
-    private void nearJob(int pos) {
+    private void job_near(int pos) {
         final BookingObject bookingdetails = BookingServicesAdapter.mResultList.get(pos);
 
-        View mView = getLayoutInflater().inflate(R.layout.nearjob_dialog, null);
+        View mView = getLayoutInflater().inflate(R.layout.job_near_dialog, null);
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(HomeActivity.this);
         mBuilder.setView(mView);
 
@@ -256,6 +250,39 @@ public class HomeActivity extends AppCompatActivity
             }
         };
         timer.start();
+    }
+
+    private void job_accept(int pos) {
+        final BookingObject bookingdetails = BookingServicesAdapter.mResultList.get(pos);
+
+        View mView = getLayoutInflater().inflate(R.layout.job_near_dialog, null);
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(HomeActivity.this);
+        mBuilder.setView(mView);
+
+        final AlertDialog dialog = mBuilder.create();
+        TextView pickup = mView.findViewById(R.id.pickup);
+        TextView dropoff = mView.findViewById(R.id.dropoff);
+        TextView fare = mView.findViewById(R.id.fare);
+        Button acceptBtn = mView.findViewById(R.id.acceptBtn);
+        Button declineBtn = mView.findViewById(R.id.declineBtn);
+        acceptBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+
+        declineBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+        pickup.setText(bookingdetails.getPickup());
+        dropoff.setText(bookingdetails.getDropoff());
+        fare.setText(bookingdetails.getFare());
+        dialog.setCancelable(false);
+        dialog.show();
     }
 
     @Override
@@ -316,7 +343,7 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onBookingClick(ArrayList<BookingObject> mResultList, int position) {
-        //nearJob(position, false);
+        job_accept(position);
     }
 
     @Override
