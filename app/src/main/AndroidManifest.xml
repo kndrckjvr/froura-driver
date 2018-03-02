@@ -32,12 +32,12 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".HomeActivity"
+            android:name=".LandingActivity"
             android:label=""
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".LandingActivity"
+            android:name=".LoginActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
         <activity
@@ -64,7 +64,6 @@
             android:value="@string/google_maps_key" />
 
         <activity android:name=".MapNavigationActivity" />
-        <activity android:name=".ServiceActivity"></activity>
     </application>
 
 </manifest>

@@ -17,9 +17,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.froura.develo4.driver.libraries.RequestPostString;
-import com.froura.develo4.driver.libraries.SnackBarCreator;
-import com.froura.develo4.driver.tasks.CheckUserTasks;
+import com.froura.develo4.driver.config.TaskConfig;
+import com.froura.develo4.driver.tasks.SuperTask;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
@@ -40,7 +39,7 @@ import org.apache.commons.lang3.text.WordUtils;
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeUnit;
 
-public class PhoneAuthentication extends AppCompatActivity implements CheckUserTasks.OnLoginDriverTasksListener {
+public class PhoneAuthentication extends AppCompatActivity implements SuperTask.TaskListener {
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -153,7 +152,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
-        Intent intent = new Intent(PhoneAuthentication.this, HomeActivity.class);
+        Intent intent = new Intent(PhoneAuthentication.this, LandingActivity.class);
         startActivity(intent);
         finish();
     }
@@ -216,7 +215,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                                 userFound = true;
                                 progressDialog.dismiss();
                                 mAuth.signOut();
-                                Intent intent = new Intent(PhoneAuthentication.this, LandingActivity.class);
+                                Intent intent = new Intent(PhoneAuthentication.this, LoginActivity.class);
                                 intent.putExtra("loginError", 1);
                                 startActivity(intent);
                                 finish();
@@ -234,7 +233,9 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                                 dbRef.child("auth").setValue(auth);
                                 dbRef.child("profile_pic").setValue(profpic);
                                 saveUserDetails();
-                                new CheckUserTasks(PhoneAuthentication.this).execute();
+                                SuperTask.execute(PhoneAuthentication.this,
+                                        TaskConfig.CHECK_USER_URL,
+                                        "check_user");
                                 break;
                             }
                         }
@@ -242,14 +243,12 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                     if(userFound) break;
                 }
                 if(!userFound) {
-                    DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("driver").child(user_id);
-                    dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
-                    dbRef.child("email").setValue(email);
-                    dbRef.child("mobnum").setValue(mobNum);
-                    dbRef.child("auth").setValue(auth);
-                    dbRef.child("profile_pic").setValue(profpic);
-                    saveUserDetails();
-                    new CheckUserTasks(PhoneAuthentication.this).execute();
+                    progressDialog.dismiss();
+                    mAuth.signOut();
+                    Intent intent = new Intent(PhoneAuthentication.this, LoginActivity.class);
+                    intent.putExtra("loginError", 1);
+                    startActivity(intent);
+                    finish();
                 }
             }
 
@@ -273,15 +272,15 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     }
 
     @Override
-    public void parseCheckUserJSONString(String jsonString) { }
+    public void onTaskRespond(String json, String id, int resultcode) { }
 
     @Override
-    public String createCheckUserPostString(ContentValues contentValues) throws UnsupportedEncodingException {
+    public ContentValues setRequestValues(ContentValues contentValues, String id) {
         contentValues.put("android", 1);
         contentValues.put("name", name);
         contentValues.put("email", email);
         contentValues.put("mobile", mobNum);
         contentValues.put("firebase_id", mAuth.getCurrentUser().getUid());
-        return RequestPostString.create(contentValues);
+        return contentValues;
     }
 }

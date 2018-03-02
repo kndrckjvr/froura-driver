@@ -228,7 +228,7 @@ public class PhoneRegistration extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(PhoneRegistration.this, LandingActivity.class);
+        Intent intent = new Intent(PhoneRegistration.this, LoginActivity.class);
         finish();
         startActivity(intent);
         return;
