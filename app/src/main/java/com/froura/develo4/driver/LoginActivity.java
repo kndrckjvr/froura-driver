@@ -29,8 +29,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-
-
         if(getIntent().getIntExtra("loginError", -1) == 1) {
             SnackBarCreator.set("Sorry! You're not a Driver.");
             SnackBarCreator.show(mobLogin);

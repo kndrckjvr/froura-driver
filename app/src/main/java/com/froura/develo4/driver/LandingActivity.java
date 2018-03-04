@@ -192,7 +192,7 @@ public class LandingActivity extends AppCompatActivity
                             }
                         }
                         BookingServicesAdapter.mResultList.add(new BookingObject(pass_id, pickupName, dropoffName, fare, pickupLoc, dropoffLoc));
-                        mAdapter.notifyDataSetChanged();
+
                         count++;
                     }
                 }

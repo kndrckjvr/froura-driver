@@ -35,8 +35,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import org.apache.commons.lang3.text.WordUtils;
+import org.json.JSONObject;
 
-import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeUnit;
 
 public class PhoneAuthentication extends AppCompatActivity implements SuperTask.TaskListener {
@@ -55,6 +55,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     private String name;
     private String profpic = "default";
     private String auth = "mobile";
+    private String database_id = "null";
     private boolean phoneReg;
     private CountDownTimer requestCodeTimer;
 
@@ -148,7 +149,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobNum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobNum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\", \"database_id\": \" "+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
@@ -226,16 +227,10 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                         for(DataSnapshot driver : users.getChildren()) {
                             if(user_id.equals(driver.getKey())) {
                                 userFound = true;
-                                DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("driver").child(user_id);
-                                dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
-                                dbRef.child("email").setValue(email);
-                                dbRef.child("mobnum").setValue(mobNum);
-                                dbRef.child("auth").setValue(auth);
-                                dbRef.child("profile_pic").setValue(profpic);
-                                saveUserDetails();
+                                progressDialog.dismiss();
                                 SuperTask.execute(PhoneAuthentication.this,
-                                        TaskConfig.CHECK_USER_URL,
-                                        "check_user");
+                                        TaskConfig.GET_DRIVER_DATA_URL,
+                                        "get_driver_data");
                                 break;
                             }
                         }
@@ -272,15 +267,50 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     }
 
     @Override
-    public void onTaskRespond(String json, String id, int resultcode) { }
+    public void onTaskRespond(String json, String id) {
+        Log.d("JSON", json);
+        switch (id) {
+            case "get_driver_data":
+                try {
+                    JSONObject jsonObject = new JSONObject(json);
+                    String status = jsonObject.getString("status");
+                    if(status.equals("success")) {
+                        String user_id = "";
+                        String plate = jsonObject.getString("plate");
+                        database_id = jsonObject.getString("database_id");
+                        email = jsonObject.getString("email");
+                        name = jsonObject.getString("name");
+                        mobNum = jsonObject.getString("contact");
+                        auth = "mobile";
+                        profpic = jsonObject.getString("img_path");
+                        user_id = jsonObject.getString("uid");
+
+                        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("driver").child(user_id);
+                        dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
+                        dbRef.child("email").setValue(email);
+                        dbRef.child("mobnum").setValue(mobNum);
+                        dbRef.child("auth").setValue(auth);
+                        dbRef.child("profile_pic").setValue(profpic);
+                        dbRef.child("plate").setValue(plate);
+
+                        saveUserDetails();
+                    } else {
+                        Toast.makeText(this, jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) { }
+                break;
+        }
+    }
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
-        contentValues.put("android", 1);
-        contentValues.put("name", name);
-        contentValues.put("email", email);
-        contentValues.put("mobile", mobNum);
-        contentValues.put("firebase_id", mAuth.getCurrentUser().getUid());
-        return contentValues;
+        switch (id) {
+            case "get_driver_data":
+                contentValues.put("android", 1);
+                contentValues.put("firebase_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+                return contentValues;
+            default:
+                return null;
+        }
     }
 }

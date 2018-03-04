@@ -6,9 +6,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-
-import com.froura.develo4.driver.config.TaskConfig;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -25,18 +22,18 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Created by KendrickCosca on 11/27/2017.
+ * Created by User on 01/10.
  */
 
-public class SuperTask extends AsyncTask<Void, Void, String> {
+public final class SuperTask extends AsyncTask<Void, Void, String> {
+
     private final Context context;
     private final String url;
     private ProgressDialog progressDialog;
     private String message;
-    private int resultcode;
     private String id;
 
-    public SuperTask(Context context, String url, String id, String message) {
+    private SuperTask(Context context, String url, String id, String message) {
         this.context = context;
         this.url = url;
         this.message = message;
@@ -48,7 +45,7 @@ public class SuperTask extends AsyncTask<Void, Void, String> {
         new SuperTask(context,url,id,message).execute();
     }
 
-    public SuperTask(Context context, String url, String id) {
+    private SuperTask(Context context, String url, String id) {
         this.context = context;
         this.url = url;
         this.id = id;
@@ -59,11 +56,11 @@ public class SuperTask extends AsyncTask<Void, Void, String> {
     }
 
     public interface TaskListener {
-        void onTaskRespond(String json, String id, int resultcode);
+        void onTaskRespond(String json, String id);
         ContentValues setRequestValues(ContentValues contentValues, String id);
     }
 
-    public static String createPostString(Set<Map.Entry<String, Object>> set) throws UnsupportedEncodingException {
+    private String createPostString(Set<Map.Entry<String, Object>> set) throws UnsupportedEncodingException {
         StringBuilder stringBuilder = new StringBuilder();
         boolean flag = true;
 
@@ -84,7 +81,7 @@ public class SuperTask extends AsyncTask<Void, Void, String> {
         if(progressDialog != null) {
             progressDialog.setMessage(this.message);
             progressDialog.setIndeterminate(false);
-            //progressDialog.setCancelable(false);
+            progressDialog.setCancelable(false);
             progressDialog.show();
         }
     }
@@ -100,11 +97,10 @@ public class SuperTask extends AsyncTask<Void, Void, String> {
 
             OutputStream outputStream = new BufferedOutputStream(httpURLConnection.getOutputStream());
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
-            Log.d("Error Tag", ((AppCompatActivity)context).getPackageName());
+            Log.d("Error Tag", (context).getPackageName());
             String postString = createPostString(((TaskListener)this.context).setRequestValues(new ContentValues(), id).valueSet());
             bufferedWriter.write(postString);
 
-            // clear
             bufferedWriter.flush();
             bufferedWriter.close();
             outputStream.close();
@@ -112,15 +108,11 @@ public class SuperTask extends AsyncTask<Void, Void, String> {
             InputStream inputStream = new BufferedInputStream(httpURLConnection.getInputStream());
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             StringBuilder stringBuilder = new StringBuilder();
-            String line = "";
+            String line;
 
             while ((line = bufferedReader.readLine()) != null){
                 stringBuilder.append(line);
             }
-
-            resultcode = httpURLConnection.getResponseCode();
-
-            // clear
             bufferedReader.close();
             inputStream.close();
 
@@ -137,7 +129,7 @@ public class SuperTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String json) {
         super.onPostExecute(json);
-        ((TaskListener)this.context).onTaskRespond(json, id, resultcode);
+        ((TaskListener)this.context).onTaskRespond(json, id);
         if(progressDialog != null)
             progressDialog.dismiss();
     }
