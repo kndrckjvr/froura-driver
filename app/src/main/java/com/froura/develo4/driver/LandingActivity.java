@@ -21,11 +21,14 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.froura.develo4.driver.adapter.BookingServicesAdapter;
@@ -48,6 +51,8 @@ import com.mapbox.services.android.telemetry.location.LocationEnginePriority;
 import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,19 +72,26 @@ public class LandingActivity extends AppCompatActivity
     private Location mLastLocation;
     final int LOCATION_REQUEST_CODE = 1;
 
-
     private PermissionsManager permissionsManager;
     private LocationLayerPlugin locationPlugin;
     private LocationEngine locationEngine;
     private Location originLocation;
 
+    private ImageView nav_view_profile_pic;
+    private TextView nav_view_name;
+    private TextView nav_view_email;
     private Switch working;
     private String uid;
 
     private boolean isWorking = false;
-    //private ValueEventListener jobFind;
 
     private SwipeRefreshLayout refreshLayout;
+    private String user_name;
+    private String user_mobnum;
+    private String user_email;
+    private String user_pic;
+    private String user_trusted_id;
+    private String user_trusted_name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +113,10 @@ public class LandingActivity extends AppCompatActivity
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+        View v = navigationView.getHeaderView(0);
+        nav_view_profile_pic = v.findViewById(R.id.nav_view_profile_pic);
+        nav_view_name = v.findViewById(R.id.nav_view_name);
+        nav_view_email = v.findViewById(R.id.nav_view_email);
         working = findViewById(R.id.workStatus);
         working.setChecked(isWorking);
         working.setOnClickListener(new View.OnClickListener() {
@@ -122,6 +138,30 @@ public class LandingActivity extends AppCompatActivity
         bookingList.setLayoutManager(new LinearLayoutManager(this));
         bookingList.addItemDecoration(new SimpleDividerItemDecoration(this));
         nearJobListener();
+    }
+
+    private void setDetails() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String JSON_DETAILS_KEY = "userDetails";
+        String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
+        try {
+            JSONObject jsonObject = new JSONObject(userDetails);
+            if(!jsonObject.getString("name").equals("NULL")) {
+                if(!jsonObject.getString("profile_pic").equals("default")) {
+                    user_pic = jsonObject.getString("profile_pic");
+                    Glide.with(this)
+                            .load(user_pic)
+                            .apply(RequestOptions.circleCropTransform())
+                            .into(nav_view_profile_pic);
+                }
+                user_name = jsonObject.getString("name");
+                user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
+                user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
+                user_trusted_id = jsonObject.getString("trusted_id").equals("null") ? "None" : jsonObject.getString("trusted_id");
+                nav_view_name.setText(jsonObject.getString("name"));
+                nav_view_email.setText(user_email);
+            }
+        } catch (Exception e) { }
     }
 
     private void removeNearest(String passId) {
