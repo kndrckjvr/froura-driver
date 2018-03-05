@@ -63,7 +63,7 @@ public class LandingActivity extends AppCompatActivity
         LocationEngineListener, PermissionsListener {
 
     private DrawerLayout drawer;
-    private RelativeLayout emptyView;
+    private RelativeLayout blank_view;
     private RecyclerView bookingList;
     private BookingServicesAdapter mAdapter;
     private DatabaseReference bookRef;
@@ -100,7 +100,7 @@ public class LandingActivity extends AppCompatActivity
 
         uid = FirebaseAuth.getInstance().getUid();
         refreshLayout = findViewById(R.id.swiperefresh);
-        emptyView = findViewById(R.id.emptyView);
+        blank_view = findViewById(R.id.blank_view);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         enableLocationPlugin();
@@ -127,17 +127,23 @@ public class LandingActivity extends AppCompatActivity
                 if(isWorking) {
                     mAdapter = new BookingServicesAdapter(LandingActivity.this, LandingActivity.this);
                     bookingList.setAdapter(mAdapter);
+                    bookingList.setVisibility(View.VISIBLE);
+                    blank_view.setVisibility(View.GONE);
+                    nearJobListener();
                 } else {
+                    blank_view.setVisibility(View.VISIBLE);
+                    bookingList.setVisibility(View.GONE);
                     bookingList.setAdapter(null);
                 }
             }
         });
         bookingList = findViewById(R.id.bookList);
         bookRef = FirebaseDatabase.getInstance().getReference("services");
+        mAdapter = new BookingServicesAdapter(this, this);
+        bookingList.setAdapter(mAdapter);
         bookingList.setHasFixedSize(true);
         bookingList.setLayoutManager(new LinearLayoutManager(this));
         bookingList.addItemDecoration(new SimpleDividerItemDecoration(this));
-        nearJobListener();
     }
 
     private void setDetails() {
@@ -232,7 +238,7 @@ public class LandingActivity extends AppCompatActivity
                             }
                         }
                         BookingServicesAdapter.mResultList.add(new BookingObject(pass_id, pickupName, dropoffName, fare, pickupLoc, dropoffLoc));
-
+                        mAdapter.notifyDataSetChanged();
                         count++;
                     }
                 }

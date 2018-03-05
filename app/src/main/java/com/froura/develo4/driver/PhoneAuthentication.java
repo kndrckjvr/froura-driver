@@ -227,7 +227,6 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                         for(DataSnapshot driver : users.getChildren()) {
                             if(user_id.equals(driver.getKey())) {
                                 userFound = true;
-                                progressDialog.dismiss();
                                 SuperTask.execute(PhoneAuthentication.this,
                                         TaskConfig.GET_DRIVER_DATA_URL,
                                         "get_driver_data");

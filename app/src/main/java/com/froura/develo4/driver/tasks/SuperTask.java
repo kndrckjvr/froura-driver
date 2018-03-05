@@ -6,6 +6,8 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -91,6 +93,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
         try {
             URL url = new URL(this.url);
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+            httpURLConnection.setConnectTimeout(10000);
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoInput(true);
             httpURLConnection.setDoOutput(true);
@@ -115,6 +118,8 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
             }
             bufferedReader.close();
             inputStream.close();
+
+            Toast.makeText(context, httpURLConnection.getResponseCode()+"", Toast.LENGTH_SHORT).show();
 
             httpURLConnection.disconnect();
 
