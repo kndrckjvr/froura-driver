@@ -18,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -51,6 +52,7 @@ import com.mapbox.services.android.telemetry.location.LocationEnginePriority;
 import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -64,6 +66,7 @@ public class LandingActivity extends AppCompatActivity
 
     private DrawerLayout drawer;
     private RelativeLayout blank_view;
+    private TextView blank_text_view;
     private RecyclerView bookingList;
     private BookingServicesAdapter mAdapter;
     private DatabaseReference bookRef;
@@ -101,6 +104,7 @@ public class LandingActivity extends AppCompatActivity
         uid = FirebaseAuth.getInstance().getUid();
         refreshLayout = findViewById(R.id.swiperefresh);
         blank_view = findViewById(R.id.blank_view);
+        blank_text_view = findViewById(R.id.blank_view_txt);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         enableLocationPlugin();
@@ -119,24 +123,9 @@ public class LandingActivity extends AppCompatActivity
         nav_view_email = v.findViewById(R.id.nav_view_email);
         working = findViewById(R.id.workStatus);
         working.setChecked(isWorking);
-        working.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                isWorking = !isWorking;
-                working.setText(isWorking ? "On-Duty" : "Off-Duty");
-                if(isWorking) {
-                    mAdapter = new BookingServicesAdapter(LandingActivity.this, LandingActivity.this);
-                    bookingList.setAdapter(mAdapter);
-                    bookingList.setVisibility(View.VISIBLE);
-                    blank_view.setVisibility(View.GONE);
-                    nearJobListener();
-                } else {
-                    blank_view.setVisibility(View.VISIBLE);
-                    bookingList.setVisibility(View.GONE);
-                    bookingList.setAdapter(null);
-                }
-            }
-        });
+        if(!isWorking) {
+            blank_text_view.setText("You're Off-Duty.");
+        }
         bookingList = findViewById(R.id.bookList);
         bookRef = FirebaseDatabase.getInstance().getReference("services");
         mAdapter = new BookingServicesAdapter(this, this);
@@ -144,6 +133,29 @@ public class LandingActivity extends AppCompatActivity
         bookingList.setHasFixedSize(true);
         bookingList.setLayoutManager(new LinearLayoutManager(this));
         bookingList.addItemDecoration(new SimpleDividerItemDecoration(this));
+        working.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isWorking = !isWorking;
+                working.setText(isWorking ? "On-Duty" : "Off-Duty");
+                if(isWorking) {
+                    nearJobListener();
+                    if(BookingServicesAdapter.mResultList.size() <= 0) {
+                        blank_text_view.setText("No Bookings Found.");
+                    } else {
+                        bookingList.setVisibility(View.VISIBLE);
+                        blank_view.setVisibility(View.GONE);
+                    }
+                    mAdapter = new BookingServicesAdapter(LandingActivity.this, LandingActivity.this);
+                    bookingList.setAdapter(mAdapter);
+                } else {
+                    blank_text_view.setText("You're Off-Duty.");
+                    blank_view.setVisibility(View.VISIBLE);
+                    bookingList.setVisibility(View.GONE);
+                    bookingList.setAdapter(null);
+                }
+            }
+        });
     }
 
     private void setDetails() {
@@ -171,14 +183,35 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void removeNearest(String passId) {
-        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" + passId);
-        dbref.child("nearest_driver").setValue("null");
+        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" + passId + "/nearest_driver");
+        dbref.removeValue();
     }
 
-    private void acceptJob(String passId) {
-        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" + passId);
+    private void acceptJob(int pos) {
+        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" + BookingServicesAdapter.mResultList.get(pos).getUid());
         dbref.child("accepted_by").setValue(uid);
-        removeNearest(passId);
+        removeNearest(BookingServicesAdapter.mResultList.get(pos).getUid());
+        saveBookingDetails(pos);
+    }
+
+    private void saveBookingDetails(int pos) {
+        BookingObject booking = BookingServicesAdapter.mResultList.get(pos);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPref.edit();
+        String JSON_DETAILS_KEY = "bookingDetails";
+        String jsonDetails = "{ \"passenger_id\" : \"" + booking.getUid() + "\", " +
+                "\"pickupName\" : \"" + booking.getPickup() + "\", " +
+                "\"pickupLat\" : \"" + booking.getPickupLatLng().getLatitude() + "\", " +
+                "\"pickupLng\" : \"" + booking.getPickupLatLng().getLongitude() + "\", " +
+                "\"dropoffName\" : \"" + booking.getDropoff() + "\", " +
+                "\"dropoffLat\" : \"" + booking.getDropoffLatLng().getLatitude() + "\", " +
+                "\"dropoffLng\": \""+ booking.getDropoffLatLng().getLongitude() +"\", " +
+                "\"fare\" : " + booking.getFare() + "}";
+        editor.putString(JSON_DETAILS_KEY, jsonDetails);
+        editor.apply();
+        Intent intent = new Intent(this, JobAcceptActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     private void nearJobListener() {
@@ -186,10 +219,13 @@ public class LandingActivity extends AppCompatActivity
         bookingRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d("nearjoblistener", "triggered");
                 BookingServicesAdapter.mResultList.clear();
                 for(DataSnapshot booking : dataSnapshot.getChildren()) {
+                    boolean nearjob = false;
                     int count = 0;
                     for (DataSnapshot pssngrid : booking.getChildren()) {
+                        boolean skip = false;
                         String pass_id = pssngrid.getKey().toString();
                         LatLng dropoffLoc = new LatLng();
                         String dropoffName = "";
@@ -231,17 +267,37 @@ public class LandingActivity extends AppCompatActivity
                                 case "fare":
                                     fare = bookingDetails.getValue().toString();
                                     break;
-                                case "nearby_driver":
-                                    if(uid.equals(booking.getValue().toString()))
-                                        job_near(count);
+                                case "nearest_driver":
+                                    if(uid.equals(bookingDetails.getValue().toString())) {
+                                        Log.d("neardriver", "uid");
+                                        nearjob = true;
+                                    }
+                                    break;
+                                case "accepted_by":
+                                    skip = true;
                                     break;
                             }
                         }
-                        BookingServicesAdapter.mResultList.add(new BookingObject(pass_id, pickupName, dropoffName, fare, pickupLoc, dropoffLoc));
-                        mAdapter.notifyDataSetChanged();
-                        count++;
+                        if(!skip) {
+                            BookingServicesAdapter.mResultList.add(new BookingObject(pass_id, pickupName, dropoffName, fare, pickupLoc, dropoffLoc));
+                            if(nearjob) {
+                                job_near(count);
+                            }
+                            count++;
+                        }
                     }
                 }
+                if(isWorking) {
+                    if(BookingServicesAdapter.mResultList.size() <= 0 || BookingServicesAdapter.mResultList == null) {
+                        blank_text_view.setText("No Bookings Found.");
+                        bookingList.setVisibility(View.GONE);
+                        blank_view.setVisibility(View.VISIBLE);
+                    } else {
+                        bookingList.setVisibility(View.VISIBLE);
+                        blank_view.setVisibility(View.GONE);
+                    }
+                }
+                mAdapter.notifyDataSetChanged();
             }
 
             @Override
@@ -251,7 +307,8 @@ public class LandingActivity extends AppCompatActivity
         });
     }
 
-    private void job_near(int pos) {
+    private void job_near(final int pos) {
+        Log.d("neardriver", "job_near");
         final BookingObject bookingdetails = BookingServicesAdapter.mResultList.get(pos);
 
         View mView = getLayoutInflater().inflate(R.layout.job_near_dialog, null);
@@ -268,7 +325,8 @@ public class LandingActivity extends AppCompatActivity
         acceptBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                acceptJob(pos);
+                dialog.dismiss();
             }
         });
 

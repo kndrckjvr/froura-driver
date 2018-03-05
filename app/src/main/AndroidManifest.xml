@@ -64,6 +64,7 @@
             android:value="@string/google_maps_key" />
 
         <activity android:name=".MapNavigationActivity" />
+        <activity android:name=".JobAcceptActivity"></activity>
     </application>
 
 </manifest>

@@ -79,8 +79,6 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         progressDialog.setCancelable(false);
 
         mobNum = getIntent().getStringExtra("mobNum");
-        email = getIntent().getStringExtra("email");
-        name = getIntent().getStringExtra("name");
         phoneReg = getIntent().getBooleanExtra("phoneReg", false);
 
         mAuth = FirebaseAuth.getInstance();

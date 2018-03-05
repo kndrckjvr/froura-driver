@@ -93,7 +93,6 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
         try {
             URL url = new URL(this.url);
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-            httpURLConnection.setConnectTimeout(10000);
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoInput(true);
             httpURLConnection.setDoOutput(true);

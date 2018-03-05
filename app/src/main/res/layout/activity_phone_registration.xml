@@ -15,7 +15,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="120dp"
         android:text="@string/registration_note"
         android:textAlignment="center"
         android:textColor="@color/textViewColor"
@@ -30,7 +30,7 @@
         android:layout_below="@+id/textView2"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
-        android:layout_marginTop="10dp">
+        android:layout_marginTop="40dp">
 
         <android.support.design.widget.TextInputEditText
             android:id="@+id/mobET"
@@ -40,41 +40,6 @@
             android:inputType="phone" />
     </android.support.design.widget.TextInputLayout>
 
-    <android.support.design.widget.TextInputLayout
-        android:id="@+id/nameTL"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/mobTL"
-        android:layout_alignStart="@+id/mobTL"
-        android:layout_below="@+id/mobTL"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="25dp"
-        android:layout_marginEnd="20dp">
 
-        <android.support.design.widget.TextInputEditText
-            android:id="@+id/nameET"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/et_hint_name"
-            android:inputType="textCapWords" />
-    </android.support.design.widget.TextInputLayout>
-
-    <android.support.design.widget.TextInputLayout
-        android:id="@+id/emailTL"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/nameTL"
-        android:layout_alignStart="@+id/nameTL"
-        android:layout_below="@+id/nameTL"
-        android:layout_marginEnd="20dp"
-        android:layout_marginRight="20dp"
-        android:layout_marginTop="25dp">
-
-        <android.support.design.widget.TextInputEditText
-            android:id="@+id/emailET"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Email Address" />
-    </android.support.design.widget.TextInputLayout>
 
 </RelativeLayout>
