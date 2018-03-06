@@ -1,5 +1,6 @@
 package com.froura.develo4.driver;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
@@ -8,6 +9,7 @@ import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -27,15 +29,21 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.ViewFlipper;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
 import com.froura.develo4.driver.adapter.BookingServicesAdapter;
+import com.froura.develo4.driver.adapter.ReservationServicesAdapter;
 import com.froura.develo4.driver.adapter.SimpleDividerItemDecoration;
+import com.froura.develo4.driver.config.TaskConfig;
 import com.froura.develo4.driver.libraries.DialogCreator;
 import com.froura.develo4.driver.objects.BookingObject;
+import com.froura.develo4.driver.objects.ReservationObject;
+import com.froura.develo4.driver.tasks.SuperTask;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -53,15 +61,21 @@ import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 
 import org.apache.commons.lang3.text.WordUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class LandingActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         DialogCreator.DialogActionListener,
+        SuperTask.TaskListener,
         BookingServicesAdapter.BookingServicesInterface,
+        ReservationServicesAdapter.ReservationServicesInterface,
         LocationEngineListener, PermissionsListener {
 
     private DrawerLayout drawer;
@@ -70,6 +84,8 @@ public class LandingActivity extends AppCompatActivity
     private RecyclerView bookingList;
     private BookingServicesAdapter mAdapter;
     private DatabaseReference bookRef;
+    private ViewFlipper viewFlipper;
+    private Toolbar toolbar;
 
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
@@ -96,6 +112,10 @@ public class LandingActivity extends AppCompatActivity
     private String user_trusted_id;
     private String user_trusted_name;
 
+    private String start_date;
+    private String end_date;
+    private String reason;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,10 +125,11 @@ public class LandingActivity extends AppCompatActivity
         refreshLayout = findViewById(R.id.swiperefresh);
         blank_view = findViewById(R.id.blank_view);
         blank_text_view = findViewById(R.id.blank_view_txt);
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
+        viewFlipper = findViewById(R.id.app_bar_landing).findViewById(R.id.vf);
         setSupportActionBar(toolbar);
         enableLocationPlugin();
-
+        setDetails();
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
              this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -333,7 +354,8 @@ public class LandingActivity extends AppCompatActivity
         declineBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                removeNearest(bookingdetails.getUid());
+                dialog.dismiss();
             }
         });
         pickup.setText(bookingdetails.getPickup());
@@ -356,7 +378,7 @@ public class LandingActivity extends AppCompatActivity
         timer.start();
     }
 
-    private void job_accept(int pos) {
+    private void job_accept(final int pos) {
         final BookingObject bookingdetails = BookingServicesAdapter.mResultList.get(pos);
 
         View mView = getLayoutInflater().inflate(R.layout.job_near_dialog, null);
@@ -372,14 +394,15 @@ public class LandingActivity extends AppCompatActivity
         acceptBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                acceptJob(pos);
+                dialog.dismiss();
             }
         });
 
         declineBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                dialog.dismiss();
             }
         });
         pickup.setText(bookingdetails.getPickup());
@@ -460,10 +483,135 @@ public class LandingActivity extends AppCompatActivity
         }
     }
 
+    private void setFileTranscript() {
+        final TextInputEditText start_date_et = findViewById(R.id.start_date_et);
+        final TextInputEditText end_date_et = findViewById(R.id.end_date_et);
+        final TextInputEditText reason_et = findViewById(R.id.reason_et);
+        Button button = findViewById(R.id.send_leave_btn);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                start_date = start_date_et.getText().toString();
+                end_date = end_date_et.getText().toString();
+                reason = reason_et.getText().toString();
+
+                SuperTask.execute(LandingActivity.this,
+                        "send_file",
+                        TaskConfig.SEND_LEAVE_URL,
+                        "Sending Leave...");
+            }
+        });
+    }
+
+    private void getReservations() {
+        SuperTask.execute(this, "get_reservations", TaskConfig.GET_RESERVATIONS_URL, "Fetching Data...");
+    }
+
+    @Override
+    public void onReservationClick(ArrayList<ReservationObject> mResultList, int position) {
+        accept_reservation(position);
+    }
+
+    private void accept_reservation(int pos) {
+        ReservationServicesAdapter.mResultList.get(pos);
+    }
+
+    @Override
+    public void onTaskRespond(String json, String id) {
+        switch (id) {
+            case "send_file":
+                try {
+                    JSONObject jsonObject = new JSONObject(json);
+                    if(jsonObject.getString("status").equals("success"))
+                    Toast.makeText(this, jsonObject.getString("message")+"", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) { }
+                break;
+            case "get_reservations":
+                try {
+                    JSONObject jsonObject = new JSONObject(json);
+                    if(jsonObject.getString("status").equals("success")) {
+                        JSONArray jsonArray = jsonObject.getJSONArray("reservations");
+                        for(int i = 0; jsonArray.length() > i; i++) {
+                            jsonObject = jsonArray.getJSONObject(i);
+                            ReservationServicesAdapter.mResultList.add(new ReservationObject(
+                                    jsonObject.getString("id"),
+                                    jsonObject.getString("passenger_id"),
+                                    jsonObject.getString("start_destination"),
+                                    jsonObject.getString("end_destination"),
+                                    jsonObject.getString("start_id"),
+                                    jsonObject.getString("end_id"),
+                                    jsonObject.getString("start_lat"),
+                                    jsonObject.getString("start_lng"),
+                                    jsonObject.getString("end_lat"),
+                                    jsonObject.getString("end_lng"),
+                                    jsonObject.getString("duration"),
+                                    jsonObject.getString("reservation_date"),
+                                    jsonObject.getString("price"),
+                                    jsonObject.getString("notes")
+                            ));
+                        }
+
+                        RecyclerView res_rec_vw = findViewById(R.id.reservation_rec_vw);
+                        ReservationServicesAdapter resAdapter = new ReservationServicesAdapter(this, this);
+                        res_rec_vw.setAdapter(resAdapter);
+                        res_rec_vw.setHasFixedSize(true);
+                        res_rec_vw.setLayoutManager(new LinearLayoutManager(this));
+                        res_rec_vw.addItemDecoration(new SimpleDividerItemDecoration(this));
+                    }
+                } catch (Exception e) { }
+                break;
+        }
+    }
+
+    @Override
+    public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        contentValues.put("android", 1);
+        switch (id) {
+            case "send_file":
+                DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                Date date = new Date();
+                contentValues.put("date_application", dateFormat.format(date));
+                contentValues.put("reason", reason);
+                contentValues.put("start_date", start_date);
+                contentValues.put("end_date", end_date);
+                contentValues.put("driver_id", FirebaseAuth.getInstance().getCurrentUser().getUid());
+                return contentValues;
+            case "get_reservations":
+                contentValues.put("uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+                return contentValues;
+        }
+        return null;
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.booking:
+                viewFlipper.setDisplayedChild(0);
+                toolbar.setTitle("Booking Lists");
+                break;
+            case R.id.reservation:
+                viewFlipper.setDisplayedChild(1);
+                toolbar.setTitle("Booking Lists");
+                break;
+            case R.id.history:
+                viewFlipper.setDisplayedChild(2);
+                toolbar.setTitle("History");
+                break;
+            case R.id.leave:
+                viewFlipper.setDisplayedChild(3);
+                toolbar.setTitle("Leave / Absences ");
+                break;
+            case R.id.profile:
+                viewFlipper.setDisplayedChild(4);
+                toolbar.setTitle("Profile");
+                break;
+            case R.id.settings:
+                viewFlipper.setDisplayedChild(5);
+                toolbar.setTitle("Settings");
+                break;
             case R.id.logout:
                 SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 SharedPreferences.Editor editor = sharedPref.edit();

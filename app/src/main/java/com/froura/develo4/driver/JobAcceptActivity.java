@@ -40,7 +40,6 @@ public class JobAcceptActivity extends AppCompatActivity implements DialogCreato
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_job_accept);
-        passenger_id = getIntent().getStringExtra("passenger_id");
 
         pickup_passenger_btn = findViewById(R.id.pickup_passenger_btn);
         start_transit_btn = findViewById(R.id.start_transit_btn);

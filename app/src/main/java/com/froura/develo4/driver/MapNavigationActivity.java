@@ -97,7 +97,9 @@ public class MapNavigationActivity extends AppCompatActivity implements Location
         NavigationListener navListener = new NavigationListener() {
             @Override
             public void onCancelNavigation() {
-
+                Intent intent = new Intent(MapNavigationActivity.this, JobAcceptActivity.class);
+                startActivity(intent);
+                finish();
             }
 
             @Override
@@ -118,6 +120,7 @@ public class MapNavigationActivity extends AppCompatActivity implements Location
                 .navigationOptions(navOptions)
                 .navigationListener(navListener)
                 .destination(destination)
+                .shouldSimulateRoute(true)
                 .awsPoolId(null)
                 .build();
 

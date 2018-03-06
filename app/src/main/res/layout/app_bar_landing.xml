@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/app_bar_landing"
     tools:context="com.froura.develo4.driver.LandingActivity">
 
     <android.support.design.widget.AppBarLayout
@@ -40,6 +41,31 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_bookings" />
+    <ViewFlipper
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:id="@+id/vf">
+
+        <include
+            layout="@layout/content_bookings"
+            android:id="@+id/booking"/>
+        <include
+            layout="@layout/content_reservation"
+            android:id="@+id/reservation"/>
+        <include
+            layout="@layout/content_history"
+            android:id="@+id/history"/>
+        <include
+            layout="@layout/content_file_transcript"
+            android:id="@+id/file_transcript"/>
+        <include
+            layout="@layout/content_profile"
+            android:id="@+id/profile"/>
+        <include
+            layout="@layout/content_settings"
+            android:id="@+id/settings"/>
+
+    </ViewFlipper>
 
 </android.support.design.widget.CoordinatorLayout>
