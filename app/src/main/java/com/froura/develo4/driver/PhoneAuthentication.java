@@ -130,9 +130,9 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         };
 
         if(mobNum.matches("^(09)\\d{9}$")) {
-            mob_num.setText("+63 " + mobNum.substring(1));
+            mob_num.setText(mobNum = "+63 " + mobNum.substring(1));
         } else if(mobNum.matches("^(\\+639)\\d{9}$")) {
-            mob_num.setText("+63 " + mobNum.substring(3));
+            mob_num.setText(mobNum = "+63 " + mobNum.substring(3));
         }
 
         if(phoneReg) {
@@ -162,7 +162,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(!task.isSuccessful()) {
-                            Log.e("firebaseMobile", task.getException().toString());
+                            progressDialog.show();
                         }
                     }
                 });
@@ -177,7 +177,6 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                 new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                     @Override
                     public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
-                        progressDialog.show();
                         signInWithPhoneAuthCredential(phoneAuthCredential);
                     }
 
