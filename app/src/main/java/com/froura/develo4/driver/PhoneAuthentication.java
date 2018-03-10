@@ -18,7 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.froura.develo4.driver.config.TaskConfig;
-import com.froura.develo4.driver.tasks.SuperTask;
+import com.froura.develo4.driver.utils.SuperTask;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
@@ -147,7 +147,12 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobNum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\", \"database_id\": \" "+ database_id +"\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", " +
+                "\"email\" : \"" + email + "\", " +
+                "\"mobnum\" : \"" + mobNum + "\", " +
+                "\"profile_pic\" : \"" + profpic + "\", " +
+                "\"auth\" : \"" + auth + "\", " +
+                "\"database_id\": \""+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();

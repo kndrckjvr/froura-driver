@@ -6,7 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 
-import com.froura.develo4.driver.libraries.SnackBarCreator;
+import com.froura.develo4.driver.utils.SnackBarCreator;
 
 public class LoginActivity extends AppCompatActivity {
 

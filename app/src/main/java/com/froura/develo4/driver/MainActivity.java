@@ -12,7 +12,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.froura.develo4.driver.libraries.DialogCreator;
+import com.froura.develo4.driver.utils.DialogCreator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 

@@ -1,4 +1,4 @@
-package com.froura.develo4.driver.libraries;
+package com.froura.develo4.driver.utils;
 
 import android.support.design.widget.Snackbar;
 import android.view.View;

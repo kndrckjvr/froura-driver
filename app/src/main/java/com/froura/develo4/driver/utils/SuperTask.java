@@ -1,10 +1,9 @@
-package com.froura.develo4.driver.tasks;
+package com.froura.develo4.driver.utils;
 
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Toast;
 

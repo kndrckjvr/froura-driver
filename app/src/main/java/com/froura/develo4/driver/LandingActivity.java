@@ -40,10 +40,10 @@ import com.froura.develo4.driver.adapter.BookingServicesAdapter;
 import com.froura.develo4.driver.adapter.ReservationServicesAdapter;
 import com.froura.develo4.driver.adapter.SimpleDividerItemDecoration;
 import com.froura.develo4.driver.config.TaskConfig;
-import com.froura.develo4.driver.libraries.DialogCreator;
+import com.froura.develo4.driver.utils.DialogCreator;
 import com.froura.develo4.driver.objects.BookingObject;
 import com.froura.develo4.driver.objects.ReservationObject;
-import com.froura.develo4.driver.tasks.SuperTask;
+import com.froura.develo4.driver.utils.SuperTask;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -60,7 +60,6 @@ import com.mapbox.services.android.telemetry.location.LocationEnginePriority;
 import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 
-import org.apache.commons.lang3.text.WordUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
