@@ -90,7 +90,7 @@ public class PhoneRegistration extends AppCompatActivity {
                 break;
             case R.id.next:
                 Intent intent = new Intent(PhoneRegistration.this, PhoneAuthentication.class);
-                intent.putExtra("mobNum", mobNum);
+                intent.putExtra("mobnum", mobNum);
                 intent.putExtra("phoneReg", true);
                 finish();
                 startActivity(intent);

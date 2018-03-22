@@ -121,7 +121,6 @@ public class LandingActivity extends AppCompatActivity
         setContentView(R.layout.activity_landing);
 
         uid = FirebaseAuth.getInstance().getUid();
-        refreshLayout = findViewById(R.id.swiperefresh);
         blank_view = findViewById(R.id.blank_view);
         blank_text_view = findViewById(R.id.blank_view_txt);
         toolbar = findViewById(R.id.toolbar);
@@ -142,6 +141,7 @@ public class LandingActivity extends AppCompatActivity
         nav_view_name = v.findViewById(R.id.nav_view_name);
         nav_view_email = v.findViewById(R.id.nav_view_email);
         working = findViewById(R.id.workStatus);
+        isWorking = getIntent().getBooleanExtra("fromJob", false);
         working.setChecked(isWorking);
         if(!isWorking) {
             blank_text_view.setText("You're Off-Duty.");
@@ -220,6 +220,7 @@ public class LandingActivity extends AppCompatActivity
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "bookingDetails";
         String jsonDetails = "{ \"passenger_id\" : \"" + booking.getUid() + "\", " +
+                "\"startTime\" : \"" + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()) + "\", " +
                 "\"pickupName\" : \"" + booking.getPickup() + "\", " +
                 "\"pickupLat\" : \"" + booking.getPickupLatLng().getLatitude() + "\", " +
                 "\"pickupLng\" : \"" + booking.getPickupLatLng().getLongitude() + "\", " +
@@ -289,12 +290,12 @@ public class LandingActivity extends AppCompatActivity
                                     break;
                                 case "nearest_driver":
                                     if(uid.equals(bookingDetails.getValue().toString())) {
-                                        Log.d("neardriver", "uid");
                                         nearjob = true;
                                     }
                                     break;
                                 case "accepted_by":
-                                    skip = true;
+                                    if(!uid.equals(bookingDetails.getValue().toString()))
+                                        skip = true;
                                     break;
                             }
                         }
@@ -331,7 +332,7 @@ public class LandingActivity extends AppCompatActivity
         Log.d("neardriver", "job_near");
         final BookingObject bookingdetails = BookingServicesAdapter.mResultList.get(pos);
 
-        View mView = getLayoutInflater().inflate(R.layout.job_near_dialog, null);
+        View mView = getLayoutInflater().inflate(R.layout.dialog_job_near, null);
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(LandingActivity.this);
         mBuilder.setView(mView);
 
@@ -342,28 +343,8 @@ public class LandingActivity extends AppCompatActivity
         final ProgressBar cntdwntimer = mView.findViewById(R.id.cntdwntimer);
         Button acceptBtn = mView.findViewById(R.id.acceptBtn);
         Button declineBtn = mView.findViewById(R.id.declineBtn);
-        acceptBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                acceptJob(pos);
-                dialog.dismiss();
-            }
-        });
 
-        declineBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                removeNearest(bookingdetails.getUid());
-                dialog.dismiss();
-            }
-        });
-        pickup.setText(bookingdetails.getPickup());
-        dropoff.setText(bookingdetails.getDropoff());
-        fare.setText(bookingdetails.getFare());
-        dialog.setCancelable(false);
-        dialog.show();
-
-        CountDownTimer timer = new CountDownTimer(15000, 1000) {
+        final CountDownTimer timer = new CountDownTimer(15000, 1000) {
             @Override
             public void onTick(long l) {
                 cntdwntimer.setProgress(Integer.parseInt(l / 1000+""));
@@ -374,13 +355,36 @@ public class LandingActivity extends AppCompatActivity
                 dialog.dismiss();
             }
         };
+        acceptBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                acceptJob(pos);
+                dialog.dismiss();
+                timer.cancel();
+            }
+        });
+
+        declineBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                removeNearest(bookingdetails.getUid());
+                dialog.dismiss();
+                timer.cancel();
+            }
+        });
+        pickup.setText(bookingdetails.getPickup());
+        dropoff.setText(bookingdetails.getDropoff());
+        fare.setText(bookingdetails.getFare());
+        dialog.setCancelable(false);
+        if(!this.isFinishing())
+            dialog.show();
         timer.start();
     }
 
     private void job_accept(final int pos) {
         final BookingObject bookingdetails = BookingServicesAdapter.mResultList.get(pos);
 
-        View mView = getLayoutInflater().inflate(R.layout.job_near_dialog, null);
+        View mView = getLayoutInflater().inflate(R.layout.dialog_job_near, null);
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(LandingActivity.this);
         mBuilder.setView(mView);
 
@@ -408,7 +412,8 @@ public class LandingActivity extends AppCompatActivity
         dropoff.setText(bookingdetails.getDropoff());
         fare.setText(bookingdetails.getFare());
         dialog.setCancelable(false);
-        dialog.show();
+        if(!this.isFinishing())
+            dialog.show();
     }
 
     @Override

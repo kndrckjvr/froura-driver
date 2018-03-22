@@ -8,11 +8,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.froura.develo4.driver.config.TaskConfig;
 import com.froura.develo4.driver.utils.DialogCreator;
+import com.froura.develo4.driver.utils.SuperTask;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -37,27 +40,14 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if(user == null) {
-                    final Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                            startActivity(intent);
-                            finish();
-                            return;
-                        }
-                    }, 10);
+                    //Check network connection
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    finish();
+                    return;
                 } else {
-                    if(!haveNetworkConnection()) {
-                        DialogCreator.create(MainActivity.this, "internetDisabled")
-                                .setTitle("No Internet Connection")
-                                .setMessage("This application needs internet connection.")
-                                .setPositiveButton("EXIT")
-                                .setCancelable(false)
-                                .show();
-                        return;
-                    }
-                    Intent intent = new Intent(MainActivity.this, LandingActivity.class);startActivity(intent);
+                    Intent intent = new Intent(MainActivity.this, LandingActivity.class);
+                    startActivity(intent);
                     finish();
                     return;
                 }

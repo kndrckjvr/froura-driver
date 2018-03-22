@@ -4,9 +4,8 @@ import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -98,7 +97,6 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
 
             OutputStream outputStream = new BufferedOutputStream(httpURLConnection.getOutputStream());
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
-            Log.d("Error Tag", (context).getPackageName());
             String postString = createPostString(((TaskListener)this.context).setRequestValues(new ContentValues(), id).valueSet());
             bufferedWriter.write(postString);
 
@@ -117,15 +115,10 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
             bufferedReader.close();
             inputStream.close();
 
-            Toast.makeText(context, httpURLConnection.getResponseCode()+"", Toast.LENGTH_SHORT).show();
-
             httpURLConnection.disconnect();
 
-            Log.d("This is the return: ", stringBuilder.toString());
             return stringBuilder.toString();
-        } catch (Exception ignored) {
-            Log.e("Error here: ", "The error is: ", ignored);
-        }
+        } catch (Exception ignored) { }
         return null;
     }
 

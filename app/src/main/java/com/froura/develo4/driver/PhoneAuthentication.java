@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.util.Log;
@@ -44,21 +45,25 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
-    private TextView requestCode;
-    private TextView mob_num;
-    private Button verify;
-    private EditText verifCode;
     private ProgressDialog progressDialog;
+    private TextView mobnum_txt_vw;
+    private Button edit_btn;
+    private TextInputEditText verification_code_et;
+    private Button verifcation_btn;
+    private TextView cntdwn_txt_vw;
+    private Button resend_btn;
 
-    private String mobNum;
+    private String mobnum;
     private String email;
     private String name;
     private String profpic = "default";
-    private String auth = "mobile";
+    private String trusted_id = "null";
     private String database_id = "null";
+    private String auth = "mobile";
     private boolean phoneReg;
     private CountDownTimer requestCodeTimer;
 
+    private String TAG = "PhoneAuth";
     private String mVerificationId;
     private PhoneAuthProvider.ForceResendingToken mResendToken;
 
@@ -66,11 +71,11 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_phone_authentication);
-
-        requestCode = findViewById(R.id.txtVw_request_code);
-        verify = findViewById(R.id.btn_verify);
-        verifCode = findViewById(R.id.et_verif_code);
-        mob_num = findViewById(R.id.txtVw_mob_num);
+        cntdwn_txt_vw = findViewById(R.id.cntdwn_txt_vw);
+        verifcation_btn = findViewById(R.id.verifcation_btn);
+        verification_code_et = findViewById(R.id.verification_code_et);
+        mobnum_txt_vw = findViewById(R.id.mobnum_txt_vw);
+        resend_btn = findViewById(R.id.resend_btn);
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Login");
@@ -78,7 +83,9 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(false);
 
-        mobNum = getIntent().getStringExtra("mobNum");
+        mobnum = getIntent().getStringExtra("mobnum");
+        email = getIntent().getStringExtra("email");
+        name = getIntent().getStringExtra("name");
         phoneReg = getIntent().getBooleanExtra("phoneReg", false);
 
         mAuth = FirebaseAuth.getInstance();
@@ -92,17 +99,17 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
             }
         };
 
-        verify.setOnClickListener(new View.OnClickListener() {
+        verifcation_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String mCode = verifCode.getText().toString();
+                String mCode = verification_code_et.getText().toString();
                 if(!mCode.isEmpty()) {
+                    progressDialog.show();
                     signInWithPhoneAuthCredential(PhoneAuthProvider.getCredential(mVerificationId, mCode));
-                    verifCode.setError(null);
-                    verifCode.setCompoundDrawablesWithIntrinsicBounds(0,0, 0,0);
+                    verification_code_et.setError(null);
+                    verification_code_et.setCompoundDrawablesWithIntrinsicBounds(0,0, 0,0);
                 } else {
-                    verifCode.setError("Code is required.");
-                    verifCode.setCompoundDrawablesWithIntrinsicBounds(0,0, R.drawable.ic_warning_red_24dp,0);
+                    verification_code_et.setError("Code is required.", getResources().getDrawable(R.drawable.ic_warning_red_24dp));
                 }
 
             }
@@ -111,36 +118,47 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         requestCodeTimer = new CountDownTimer(60000, 1000) {
             @Override
             public void onTick(long l) {
-                requestCode.setText("Request a new code in 00:"+ l/1000);
-                requestCode.setTextColor(getResources().getColor(R.color.textViewColor));
+                cntdwn_txt_vw.setText("Request a new code in 00:"+ (l < 10000 ? "0" + l/1000 : l/1000));
             }
 
             @Override
             public void onFinish() {
-                requestCode.setText(Html.fromHtml("<u>Request a new code.</u>"));
-                requestCode.setTextColor(getResources().getColor(R.color.textLinkColor));
-
-                requestCode.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        requestCode();
-                    }
-                });
+                cntdwn_txt_vw.setVisibility(View.GONE);
+                resend_btn.setVisibility(View.VISIBLE);
             }
         };
 
-        if(mobNum.matches("^(09)\\d{9}$")) {
-            mob_num.setText(mobNum = "+63 " + mobNum.substring(1));
-        } else if(mobNum.matches("^(\\+639)\\d{9}$")) {
-            mob_num.setText(mobNum = "+63 " + mobNum.substring(3));
+        resend_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestCode();
+                requestCodeTimer.start();
+                cntdwn_txt_vw.setVisibility(View.VISIBLE);
+                resend_btn.setVisibility(View.GONE);
+            }
+        });
+
+        if(mobnum.matches("^(09)\\d{9}$")) {
+            mobnum_txt_vw.setText("+63 " + mobnum.substring(1));
+            mobnum = "+63" + mobnum.substring(1);
+        } else if(mobnum.matches("^(\\+639)\\d{9}$")) {
+            mobnum_txt_vw.setText(mobnum = "+63 " + mobnum.substring(3));
+            mobnum = "+63" + mobnum.substring(3);
         }
 
         if(phoneReg) {
             requestCode();
-            requestCode.setOnClickListener(null);
             requestCodeTimer.start();
             phoneReg = false;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent intent = new Intent(PhoneAuthentication.this, PhoneRegistration.class);
+        startActivity(intent);
+        finish();
     }
 
     private void saveUserDetails() {
@@ -149,10 +167,11 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         String JSON_DETAILS_KEY = "userDetails";
         String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", " +
                 "\"email\" : \"" + email + "\", " +
-                "\"mobnum\" : \"" + mobNum + "\", " +
+                "\"mobnum\" : \"" + mobnum + "\", " +
                 "\"profile_pic\" : \"" + profpic + "\", " +
+                "\"trusted_id\" : " + trusted_id + ", " +
                 "\"auth\" : \"" + auth + "\", " +
-                "\"database_id\": \""+ database_id +"\"}";
+                "\"database_id\": \" "+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
@@ -166,32 +185,28 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(!task.isSuccessful()) {
-                            progressDialog.show();
-                        }
+                        if (task.isSuccessful()) { }
                     }
                 });
     }
 
     private void requestCode() {
         PhoneAuthProvider.getInstance().verifyPhoneNumber(
-                mobNum,
+                mobnum,
                 60,
                 TimeUnit.SECONDS,
                 PhoneAuthentication.this,
                 new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                     @Override
                     public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
+                        progressDialog.show();
                         signInWithPhoneAuthCredential(phoneAuthCredential);
                     }
 
                     @Override
                     public void onVerificationFailed(FirebaseException e) {
-                        if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                            //Phone number is incorrect
-                            Toast.makeText(PhoneAuthentication.this, "Phone number is incorrect!", Toast.LENGTH_SHORT).show();
-                        } else if (e instanceof FirebaseTooManyRequestsException) {
-                            //Quota has been reached
+                        Log.w(TAG, "onVerificationFailed", e);
+                        if (e instanceof FirebaseTooManyRequestsException) {
                             Toast.makeText(PhoneAuthentication.this, "Server Overload! A request has been sent.", Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -269,7 +284,6 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
 
     @Override
     public void onTaskRespond(String json, String id) {
-        Log.d("JSON", json);
         switch (id) {
             case "get_driver_data":
                 try {
@@ -281,7 +295,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                         database_id = jsonObject.getString("database_id");
                         email = jsonObject.getString("email");
                         name = jsonObject.getString("name");
-                        mobNum = jsonObject.getString("contact");
+                        mobnum = jsonObject.getString("contact");
                         auth = "mobile";
                         profpic = jsonObject.getString("img_path");
                         user_id = jsonObject.getString("uid");
@@ -289,14 +303,19 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("driver").child(user_id);
                         dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
                         dbRef.child("email").setValue(email);
-                        dbRef.child("mobnum").setValue(mobNum);
+                        dbRef.child("mobnum").setValue(mobnum);
                         dbRef.child("auth").setValue(auth);
                         dbRef.child("profile_pic").setValue(profpic);
                         dbRef.child("plate").setValue(plate);
 
                         saveUserDetails();
                     } else {
-                        Toast.makeText(this, jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
+                        progressDialog.dismiss();
+                        mAuth.signOut();
+                        Intent intent = new Intent(PhoneAuthentication.this, LoginActivity.class);
+                        intent.putExtra("loginError", 1);
+                        startActivity(intent);
+                        finish();
                     }
                 } catch (Exception e) { }
                 break;

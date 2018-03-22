@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 // classes needed to initialize map
+import com.froura.develo4.driver.utils.NavigationLauncher;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.maps.MapView;
 
@@ -49,7 +50,7 @@ import android.util.Log;
 // classes needed to launch navigation UI
 import android.view.View;
 import android.widget.Button;
-import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher;
+import android.widget.Toast;
 
 public class MapNavigationActivity extends AppCompatActivity implements LocationEngineListener, PermissionsListener {
 
@@ -94,33 +95,11 @@ public class MapNavigationActivity extends AppCompatActivity implements Location
                 .unitType(NavigationUnitType.TYPE_METRIC)
                 .build();
 
-        NavigationListener navListener = new NavigationListener() {
-            @Override
-            public void onCancelNavigation() {
-                Intent intent = new Intent(MapNavigationActivity.this, JobAcceptActivity.class);
-                startActivity(intent);
-                finish();
-            }
-
-            @Override
-            public void onNavigationFinished() {
-                Intent intent = new Intent(MapNavigationActivity.this, JobAcceptActivity.class);
-                startActivity(intent);
-                finish();
-            }
-
-            @Override
-            public void onNavigationRunning() {
-
-            }
-        };
-
         NavigationViewOptions options = NavigationViewOptions.builder()
                 .origin(origin)
                 .navigationOptions(navOptions)
-                .navigationListener(navListener)
                 .destination(destination)
-                .shouldSimulateRoute(true)
+                //.shouldSimulateRoute(true)
                 .awsPoolId(null)
                 .build();
 
