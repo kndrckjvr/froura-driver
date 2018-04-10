@@ -37,16 +37,16 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".LoginActivity"
+            android:name=".registration.LoginActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
         <activity
-            android:name=".PhoneRegistration"
+            android:name=".registration.PhoneRegistration"
             android:label=""
             android:screenOrientation="portrait"
             android:theme="@style/RegistrationTheme" />
         <activity
-            android:name=".PhoneAuthentication"
+            android:name=".registration.PhoneAuthentication"
             android:label=""
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
@@ -63,10 +63,10 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <activity android:name=".MapNavigationActivity" />
-        <activity android:name=".JobAcceptActivity"
+        <activity android:name=".mapping.MapNavigationActivity" />
+        <activity android:name=".job.JobAcceptActivity"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
-        <activity android:name=".NavigationActivity"></activity>
+        <activity android:name=".mapping.NavigationActivity"></activity>
     </application>
 
 </manifest>

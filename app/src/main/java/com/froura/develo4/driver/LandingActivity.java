@@ -40,6 +40,7 @@ import com.froura.develo4.driver.adapter.BookingServicesAdapter;
 import com.froura.develo4.driver.adapter.ReservationServicesAdapter;
 import com.froura.develo4.driver.adapter.SimpleDividerItemDecoration;
 import com.froura.develo4.driver.config.TaskConfig;
+import com.froura.develo4.driver.job.JobAcceptActivity;
 import com.froura.develo4.driver.utils.DialogCreator;
 import com.froura.develo4.driver.objects.BookingObject;
 import com.froura.develo4.driver.objects.ReservationObject;
@@ -127,7 +128,6 @@ public class LandingActivity extends AppCompatActivity
         viewFlipper = findViewById(R.id.app_bar_landing).findViewById(R.id.vf);
         setSupportActionBar(toolbar);
         enableLocationPlugin();
-        setDetails();
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
              this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -140,6 +140,7 @@ public class LandingActivity extends AppCompatActivity
         nav_view_profile_pic = v.findViewById(R.id.nav_view_profile_pic);
         nav_view_name = v.findViewById(R.id.nav_view_name);
         nav_view_email = v.findViewById(R.id.nav_view_email);
+        setDetails();
         working = findViewById(R.id.workStatus);
         isWorking = getIntent().getBooleanExtra("fromJob", false);
         working.setChecked(isWorking);
@@ -182,24 +183,22 @@ public class LandingActivity extends AppCompatActivity
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String JSON_DETAILS_KEY = "userDetails";
         String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
+        Log.d("FROURA_LOG_TAG", ""+userDetails);
         try {
             JSONObject jsonObject = new JSONObject(userDetails);
-            if(!jsonObject.getString("name").equals("NULL")) {
-                if(!jsonObject.getString("profile_pic").equals("default")) {
-                    user_pic = jsonObject.getString("profile_pic");
-                    Glide.with(this)
-                            .load(user_pic)
-                            .apply(RequestOptions.circleCropTransform())
-                            .into(nav_view_profile_pic);
-                }
-                user_name = jsonObject.getString("name");
-                user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
-                user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
-                user_trusted_id = jsonObject.getString("trusted_id").equals("null") ? "None" : jsonObject.getString("trusted_id");
-                nav_view_name.setText(jsonObject.getString("name"));
-                nav_view_email.setText(user_email);
+            if(!jsonObject.getString("profile_pic").equals("default")) {
+                user_pic = jsonObject.getString("profile_pic");
+                Glide.with(this)
+                        .load(user_pic)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(nav_view_profile_pic);
             }
-        } catch (Exception e) { }
+            user_name = jsonObject.getString("name");
+            user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
+            user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
+            nav_view_name.setText(user_name);
+            nav_view_email.setText(user_email);
+        } catch (Exception e) { e.printStackTrace(); }
     }
 
     private void removeNearest(String passId) {
@@ -240,7 +239,6 @@ public class LandingActivity extends AppCompatActivity
         bookingRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d("nearjoblistener", "triggered");
                 BookingServicesAdapter.mResultList.clear();
                 for(DataSnapshot booking : dataSnapshot.getChildren()) {
                     boolean nearjob = false;
@@ -352,14 +350,16 @@ public class LandingActivity extends AppCompatActivity
 
             @Override
             public void onFinish() {
-                dialog.dismiss();
+                if(dialog.isShowing())
+                    dialog.dismiss();
             }
         };
         acceptBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 acceptJob(pos);
-                dialog.dismiss();
+                if(dialog.isShowing())
+                    dialog.dismiss();
                 timer.cancel();
             }
         });
@@ -368,7 +368,9 @@ public class LandingActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 removeNearest(bookingdetails.getUid());
-                dialog.dismiss();
+
+                if(dialog.isShowing())
+                    dialog.dismiss();
                 timer.cancel();
             }
         });
@@ -398,14 +400,16 @@ public class LandingActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 acceptJob(pos);
-                dialog.dismiss();
+                if(dialog.isShowing())
+                    dialog.dismiss();
             }
         });
 
         declineBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                dialog.dismiss();
+                if(dialog.isShowing())
+                    dialog.dismiss();
             }
         });
         pickup.setText(bookingdetails.getPickup());

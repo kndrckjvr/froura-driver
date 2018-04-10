@@ -1,6 +1,5 @@
-package com.froura.develo4.driver;
+package com.froura.develo4.driver.job;
 
-import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -13,7 +12,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -26,6 +24,8 @@ import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
+import com.froura.develo4.driver.LandingActivity;
+import com.froura.develo4.driver.R;
 import com.froura.develo4.driver.config.TaskConfig;
 import com.froura.develo4.driver.utils.DialogCreator;
 import com.froura.develo4.driver.objects.BookingObject;
@@ -42,11 +42,14 @@ import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.services.android.navigation.ui.v5.NavigationViewOptions;
+import com.mapbox.services.android.navigation.ui.v5.listeners.NavigationListener;
 import com.mapbox.services.android.navigation.v5.navigation.MapboxNavigationOptions;
 import com.mapbox.services.android.navigation.v5.navigation.NavigationUnitType;
 
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -82,7 +85,7 @@ public class JobAcceptActivity extends AppCompatActivity
     private String start_time;
     private String pickup_name;
     private String dropoff_name;
-    private String amount;
+    private String amount = "";
 
     private String uid;
     private SharedPreferences sharedPref;
@@ -91,7 +94,6 @@ public class JobAcceptActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_job_accept);
-
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setIndeterminate(false);
@@ -210,7 +212,23 @@ public class JobAcceptActivity extends AppCompatActivity
                 .origin(origin)
                 .navigationOptions(navOptions)
                 .destination(destination)
-                .shouldSimulateRoute(true)
+                .navigationListener(new NavigationListener() {
+                    @Override
+                    public void onCancelNavigation() {
+
+                    }
+
+                    @Override
+                    public void onNavigationFinished() {
+                        finish();
+                    }
+
+                    @Override
+                    public void onNavigationRunning() {
+
+                    }
+                })
+                .shouldSimulateRoute(false)
                 .awsPoolId(null)
                 .build();
 
@@ -220,7 +238,6 @@ public class JobAcceptActivity extends AppCompatActivity
     private void setDetails() {
         String JSON_DETAILS_KEY = "bookingDetails";
         String bookingDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"passenger_id\" : NULL }");
-        Log.d("JOBACCEPT_AC", bookingDetails);
         Log.d("bookingDetails", bookingDetails+"");
         try {
             JSONObject jsonObject = new JSONObject(bookingDetails);
@@ -353,20 +370,30 @@ public class JobAcceptActivity extends AppCompatActivity
                 finish();
                 break;
             case "amount":
-                String userDetails = sharedPref.getString("userDetails", "");
-                editor.clear();
-                editor.putString("userDetails", userDetails);
-                editor.apply();
-                SuperTask.execute(JobAcceptActivity.this,
-                        TaskConfig.SAVE_BOOKING_DETAILS,
-                        "amount");
-                end_trip();
-                save_history();
+                if(amount.isEmpty()) {
+                    DialogCreator.create(JobAcceptActivity.this, "amount")
+                            .setTitle("Input amount(Meter Fare):")
+                            .setView(R.layout.dialog_amount)
+                            .setPositiveButton("Save")
+                            .setNegativeButton("Cancel")
+                            .show();
+                } else {
+                    String userDetails = sharedPref.getString("userDetails", "");
+                    editor.clear();
+                    editor.putString("userDetails", userDetails);
+                    editor.apply();
+                    SuperTask.execute(JobAcceptActivity.this,
+                            TaskConfig.SAVE_BOOKING_DETAILS,
+                            "amount");
+                    end_trip();
+                    save_history();
+                }
                 break;
         }
     }
 
     private void save_history() {
+        double price = Double.parseDouble(amount);
         DatabaseReference historyRef = FirebaseDatabase.getInstance()
                 .getReference("history/"+passenger_id);
 
@@ -384,6 +411,7 @@ public class JobAcceptActivity extends AppCompatActivity
         historyRef.child("pickup").child("lat").setValue(pickupLatLng.getLatitude());
         historyRef.child("pickup").child("lng").setValue(pickupLatLng.getLongitude());
         historyRef.child("time").setValue(new SimpleDateFormat("h:mm a").format(new Date()));
+        historyRef.child("price").setValue("Php " + String.format("%.2f",price));
         DatabaseReference bookRef = FirebaseDatabase.getInstance().getReference("services/booking/" + passenger_id);
         bookRef.removeValue();
     }

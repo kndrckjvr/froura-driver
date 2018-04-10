@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.froura.develo4.driver.NavigationActivity">
+    tools:context="com.froura.develo4.driver.mapping.NavigationActivity">
 
     <com.mapbox.services.android.navigation.ui.v5.NavigationView
         android:id="@+id/navigationView"

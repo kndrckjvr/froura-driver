@@ -1,4 +1,4 @@
-package com.froura.develo4.driver;
+package com.froura.develo4.driver.mapping;
 
 
 import android.content.Intent;
@@ -9,6 +9,8 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.froura.develo4.driver.job.JobAcceptActivity;
+import com.froura.develo4.driver.R;
 import com.froura.develo4.driver.utils.NavigationLauncher;
 import com.mapbox.geojson.Point;
 import com.mapbox.services.android.navigation.ui.v5.NavigationView;

@@ -7,7 +7,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FBB71E"
-    tools:context="com.froura.develo4.driver.LoginActivity">
+    tools:context="com.froura.develo4.driver.registration.LoginActivity">
 
     <Button
         android:id="@+id/mobLogin"

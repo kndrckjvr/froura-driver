@@ -5,17 +5,14 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.froura.develo4.driver.config.TaskConfig;
+import com.froura.develo4.driver.registration.LoginActivity;
 import com.froura.develo4.driver.utils.DialogCreator;
-import com.froura.develo4.driver.utils.SuperTask;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 

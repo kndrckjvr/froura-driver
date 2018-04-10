@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    tools:context="com.froura.develo4.driver.JobAcceptActivity"
+    tools:context="com.froura.develo4.driver.job.JobAcceptActivity"
     tools:layout_editor_absoluteY="81dp">
 
     <LinearLayout

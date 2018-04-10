@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import com.froura.develo4.driver.NavigationActivity;
+import com.froura.develo4.driver.mapping.NavigationActivity;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mapbox.api.directions.v5.DirectionsAdapterFactory;

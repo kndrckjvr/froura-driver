@@ -1,4 +1,4 @@
-package com.froura.develo4.driver;
+package com.froura.develo4.driver.registration;
 
 import android.app.ProgressDialog;
 import android.content.ContentValues;
@@ -10,14 +10,14 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.froura.develo4.driver.LandingActivity;
+import com.froura.develo4.driver.R;
 import com.froura.develo4.driver.config.TaskConfig;
 import com.froura.develo4.driver.utils.SuperTask;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -26,7 +26,6 @@ import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.DataSnapshot;
@@ -57,7 +56,6 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     private String email;
     private String name;
     private String profpic = "default";
-    private String trusted_id = "null";
     private String database_id = "null";
     private String auth = "mobile";
     private boolean phoneReg;
@@ -165,13 +163,12 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", " +
+        String jsonDetails = "{\"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", " +
                 "\"email\" : \"" + email + "\", " +
                 "\"mobnum\" : \"" + mobnum + "\", " +
                 "\"profile_pic\" : \"" + profpic + "\", " +
-                "\"trusted_id\" : " + trusted_id + ", " +
                 "\"auth\" : \"" + auth + "\", " +
-                "\"database_id\": \" "+ database_id +"\"}";
+                "\"database_id\": \""+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
