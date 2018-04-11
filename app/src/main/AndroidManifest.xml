@@ -67,6 +67,9 @@
         <activity android:name=".job.JobAcceptActivity"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
         <activity android:name=".mapping.NavigationActivity"></activity>
+        <activity
+            android:name=".history.HistorySingleActivity"
+            android:label=""></activity>
     </application>
 
 </manifest>

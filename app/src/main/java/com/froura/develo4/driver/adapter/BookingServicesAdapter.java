@@ -2,7 +2,6 @@ package com.froura.develo4.driver.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,13 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.froura.develo4.driver.R;
-import com.froura.develo4.driver.objects.BookingObject;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.froura.develo4.driver.object.BookingObject;
 
 import java.util.ArrayList;
 
@@ -28,11 +21,12 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
 
     private Context mContext;
     private BookingServicesInterface mListener;
-    public static ArrayList<BookingObject> mResultList = new ArrayList<>();
+    private ArrayList<BookingObject> mResultList = new ArrayList<>();
 
-    public BookingServicesAdapter(Context mContext, BookingServicesInterface mListener) {
+    public BookingServicesAdapter(Context mContext, BookingServicesInterface mListener, ArrayList<BookingObject> mResultList) {
         this.mContext = mContext;
         this.mListener = mListener;
+        this.mResultList = mResultList;
     }
 
     public interface BookingServicesInterface {

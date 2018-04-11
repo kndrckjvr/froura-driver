@@ -1,4 +1,4 @@
-package com.froura.develo4.driver.objects;
+package com.froura.develo4.driver.object;
 
 
 import com.mapbox.mapboxsdk.geometry.LatLng;

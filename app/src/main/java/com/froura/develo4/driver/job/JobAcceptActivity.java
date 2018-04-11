@@ -28,7 +28,7 @@ import com.froura.develo4.driver.LandingActivity;
 import com.froura.develo4.driver.R;
 import com.froura.develo4.driver.config.TaskConfig;
 import com.froura.develo4.driver.utils.DialogCreator;
-import com.froura.develo4.driver.objects.BookingObject;
+import com.froura.develo4.driver.object.BookingObject;
 import com.froura.develo4.driver.utils.NavigationLauncher;
 import com.froura.develo4.driver.utils.SuperTask;
 import com.google.android.gms.common.ConnectionResult;
@@ -48,8 +48,6 @@ import com.mapbox.services.android.navigation.v5.navigation.NavigationUnitType;
 
 import org.json.JSONObject;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -412,6 +410,25 @@ public class JobAcceptActivity extends AppCompatActivity
         historyRef.child("pickup").child("lng").setValue(pickupLatLng.getLongitude());
         historyRef.child("time").setValue(new SimpleDateFormat("h:mm a").format(new Date()));
         historyRef.child("price").setValue("Php " + String.format("%.2f",price));
+        historyRef.child("service").setValue("Booking");
+
+        historyRef = FirebaseDatabase.getInstance()
+                .getReference("history/"+FirebaseAuth.getInstance().getUid());
+
+        push_id = historyRef.push().getKey();
+        historyRef = FirebaseDatabase.getInstance()
+                .getReference("history/"+FirebaseAuth.getInstance().getUid()+"/"+push_id);
+        historyRef.child("date").setValue(new SimpleDateFormat("MMMM dd, yyyy").format(new Date()));
+        historyRef.child("passenger").child("id").setValue(passenger_id);
+        historyRef.child("dropoff").child("name").setValue(dropoff_name);
+        historyRef.child("dropoff").child("lat").setValue(dropoffLatLng.getLatitude());
+        historyRef.child("dropoff").child("lng").setValue(dropoffLatLng.getLongitude());
+        historyRef.child("pickup").child("name").setValue(pickup_name);
+        historyRef.child("pickup").child("lat").setValue(pickupLatLng.getLatitude());
+        historyRef.child("pickup").child("lng").setValue(pickupLatLng.getLongitude());
+        historyRef.child("time").setValue(new SimpleDateFormat("h:mm a").format(new Date()));
+        historyRef.child("price").setValue("Php " + String.format("%.2f",price));
+        historyRef.child("service").setValue("Booking");
         DatabaseReference bookRef = FirebaseDatabase.getInstance().getReference("services/booking/" + passenger_id);
         bookRef.removeValue();
     }

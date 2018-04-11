@@ -28,6 +28,8 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     compile 'de.hdodenhof:circleimageview:2.1.0'
     compile 'org.apache.commons:commons-lang3:3.1'
+    implementation 'com.github.jd-alexander:library:1.1.0';
+    compile 'com.google.android.gms:play-services-maps:11.6.0'
     compile 'com.google.android.gms:play-services-location:11.6.0'
     compile 'com.google.firebase:firebase-core:11.6.0'
     compile 'com.google.firebase:firebase-database:11.6.0'

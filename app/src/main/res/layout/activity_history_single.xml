@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.froura.develo4.driver.history.HistorySingleActivity">
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:map="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        map:cameraTargetLat="14.5330173"
+        map:cameraTargetLng="121.0158656"
+        map:cameraZoom="11"
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintStart_toStartOf="parent"
+        map:layout_constraintTop_toTopOf="parent"
+        map:layout_constraintTop_toBottomOf="parent"
+        map:uiCompass="false"
+        map:uiTiltGestures="false" />
+
+    <LinearLayout
+        android:id="@+id/history_details_layout"
+        android:layout_width="match_parent"
+        android:layout_height="163dp"
+        android:background="#ffff"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:clickable="true"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/fare_txt_vw"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:layout_weight="1"
+                    android:padding="5dp"
+                    android:drawablePadding="5dp"
+                    android:text="Php 840.00"
+                    android:ellipsize="marquee"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:singleLine="true"
+                    android:textColor="#000"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/date_txt_vw"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="false"
+                    android:padding="5dp"
+                    android:drawablePadding="5dp"
+                    android:layout_gravity="end"
+                    android:textAlignment="viewEnd"
+                    android:layout_weight="1"
+                    android:text="December 20, 2017, 12:00 AM"
+                    android:textColor="#000"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_marginTop="5dp"
+                android:layout_height="1dp"
+                android:clickable="false"
+                android:focusable="false"
+                android:background="#454545"/>
+
+            <TextView
+                android:id="@+id/pickup_txt_vw"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:layout_weight="1"
+                android:drawableLeft="@drawable/ic_pin_yellow_24dp"
+                android:padding="5dp"
+                android:drawablePadding="5dp"
+                android:text="University of the East, Manila Campus"
+                android:ellipsize="marquee"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/dropoff_txt_vw"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clickable="false"
+                android:layout_weight="1"
+                android:drawableLeft="@drawable/ic_pin_black_24dp
+"
+                android:padding="5dp"
+                android:drawablePadding="5dp"
+                android:text="Malabon"
+                android:ellipsize="marquee"
+                android:focusable="false"
+                android:focusableInTouchMode="false"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textSize="16sp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_marginTop="5dp"
+                android:layout_height="1dp"
+                android:clickable="false"
+                android:focusable="false"
+                android:background="#454545"/>
+
+            <TextView
+                android:id="@+id/service_type_txt_vw"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#434343"
+                android:layout_gravity="end"
+                android:textAlignment="viewEnd"
+                android:padding="4dp"
+                android:fontFamily="@font/open_sans_regular"
+                android:text="Booking" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_marginTop="5dp"
+                android:layout_height="1dp"
+                android:clickable="false"
+                android:focusable="false"
+                android:background="#454545"/>
+
+        </LinearLayout>
+    </LinearLayout>
+</android.support.constraint.ConstraintLayout>
