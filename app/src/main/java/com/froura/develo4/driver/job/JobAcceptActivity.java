@@ -290,13 +290,20 @@ public class JobAcceptActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
-        DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
+        DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("working_drivers");
         GeoFire geoFire = new GeoFire(driversAvailable);
         if (location != null) {
             progressDialog.dismiss();
             originLocation = location;
             geoFire.setLocation(uid, new GeoLocation(location.getLatitude(), location.getLongitude()));
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if(mGoogleApiClient.isConnected())
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 
     @Override

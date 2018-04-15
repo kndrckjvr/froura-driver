@@ -109,8 +109,7 @@
                 android:layout_height="wrap_content"
                 android:clickable="false"
                 android:layout_weight="1"
-                android:drawableLeft="@drawable/ic_pin_black_24dp
-"
+                android:drawableLeft="@drawable/ic_pin_black_24dp"
                 android:padding="5dp"
                 android:drawablePadding="5dp"
                 android:text="Malabon"

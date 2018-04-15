@@ -4,19 +4,20 @@ import android.app.DatePickerDialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,7 +28,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -41,7 +41,6 @@ import com.firebase.geofire.GeoLocation;
 import com.froura.develo4.driver.adapter.BookingServicesAdapter;
 import com.froura.develo4.driver.adapter.HistoryAdapter;
 import com.froura.develo4.driver.adapter.ReservationListAdapter;
-import com.froura.develo4.driver.adapter.SimpleDividerItemDecoration;
 import com.froura.develo4.driver.config.TaskConfig;
 import com.froura.develo4.driver.history.HistorySingleActivity;
 import com.froura.develo4.driver.job.JobAcceptActivity;
@@ -51,7 +50,10 @@ import com.froura.develo4.driver.object.BookingObject;
 import com.froura.develo4.driver.object.ReservationObject;
 import com.froura.develo4.driver.utils.SnackBarCreator;
 import com.froura.develo4.driver.utils.SuperTask;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -59,13 +61,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.plugins.locationlayer.LocationLayerPlugin;
-import com.mapbox.services.android.location.LostLocationEngine;
-import com.mapbox.services.android.telemetry.location.LocationEngine;
-import com.mapbox.services.android.telemetry.location.LocationEngineListener;
-import com.mapbox.services.android.telemetry.location.LocationEnginePriority;
-import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
-import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -76,7 +71,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 public class LandingActivity extends AppCompatActivity
@@ -84,27 +78,20 @@ public class LandingActivity extends AppCompatActivity
         DialogCreator.DialogActionListener,
         SuperTask.TaskListener,
         BookingServicesAdapter.BookingServicesInterface,
-        LocationEngineListener, PermissionsListener,
         HistoryAdapter.HistoryAdapterListener,
-        ReservationListAdapter.ReservationListAdapterListener {
+        ReservationListAdapter.ReservationListAdapterListener,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        com.google.android.gms.location.LocationListener {
 
     private DrawerLayout drawer;
-    private RelativeLayout blank_view;
-    private TextView blank_text_view;
-    private RecyclerView bookingList;
-    private BookingServicesAdapter mAdapter;
-    private DatabaseReference bookRef;
     private ViewFlipper viewFlipper;
     private Toolbar toolbar;
 
     private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
     private Location mLastLocation;
     final int LOCATION_REQUEST_CODE = 1;
-
-    private PermissionsManager permissionsManager;
-    private LocationLayerPlugin locationPlugin;
-    private LocationEngine locationEngine;
-    private Location originLocation;
 
     private ImageView nav_view_profile_pic;
     private TextView nav_view_name;
@@ -113,8 +100,8 @@ public class LandingActivity extends AppCompatActivity
     private String uid;
 
     private boolean isWorking = false;
+    private DatabaseReference bookingRef;
 
-    private SwipeRefreshLayout refreshLayout;
     private String user_name;
     private String user_mobnum;
     private String user_email;
@@ -125,16 +112,22 @@ public class LandingActivity extends AppCompatActivity
     private String start_date;
     private String end_date;
     private String reason;
-    private ArrayList<BookingObject> mResultList = new ArrayList<>();
+    private ArrayList<BookingObject> bookingList = new ArrayList<>();
     private String[] monthNames = {"January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"};
 
     private HistoryAdapter historyAdapter;
+    private BookingServicesAdapter bookingAdapter;
+    private ReservationListAdapter resAdapter;
 
     private RecyclerView res_list_rec_vw;
     private RelativeLayout res_list_loading_view;
     private RelativeLayout res_list_blank_view;
-    private ReservationListAdapter resAdapter;
+
+    private RecyclerView booking_rec_vw;
+    private RelativeLayout booking_loading_view;
+    private RelativeLayout booking_blank_view;
+    private TextView booking_blank_txt_vw;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,18 +135,18 @@ public class LandingActivity extends AppCompatActivity
         setContentView(R.layout.activity_landing);
 
         uid = FirebaseAuth.getInstance().getUid();
-        blank_view = findViewById(R.id.blank_view);
-        blank_text_view = findViewById(R.id.blank_view_txt);
+
+
         toolbar = findViewById(R.id.toolbar);
-        viewFlipper = findViewById(R.id.app_bar_landing).findViewById(R.id.vf);
+        toolbar.setTitle("Booking List");
         setSupportActionBar(toolbar);
-        enableLocationPlugin();
+        working = findViewById(R.id.workStatus);
+        viewFlipper = findViewById(R.id.app_bar_landing).findViewById(R.id.vf);
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-             this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.getMenu().getItem(0).setChecked(true);
@@ -161,57 +154,177 @@ public class LandingActivity extends AppCompatActivity
         nav_view_profile_pic = v.findViewById(R.id.nav_view_profile_pic);
         nav_view_name = v.findViewById(R.id.nav_view_name);
         nav_view_email = v.findViewById(R.id.nav_view_email);
+
         setDetails();
-        working = findViewById(R.id.workStatus);
+
+        booking_blank_view = findViewById(R.id.booking_blank_view);
+        booking_blank_txt_vw = findViewById(R.id.booking_blank_txt_vw);
+        booking_loading_view = findViewById(R.id.booking_loading_view);
+
         isWorking = getIntent().getBooleanExtra("fromJob", false);
         working.setChecked(isWorking);
-        bookingList = findViewById(R.id.bookList);
-        bookRef = FirebaseDatabase.getInstance().getReference("services");
-        bookingList.setAdapter(mAdapter);
-        bookingList.setHasFixedSize(true);
-        bookingList.setLayoutManager(new LinearLayoutManager(this));
-        bookingList.addItemDecoration(new SimpleDividerItemDecoration(this));
-        mAdapter = new BookingServicesAdapter(LandingActivity.this, LandingActivity.this, mResultList);
-        bookingList.setAdapter(mAdapter);
-        working.setText(isWorking ? "On-Duty" : "Off-Duty");
-        if(!isWorking) {
-            blank_text_view.setText("You're Off-Duty.");
-        } else {
-            if(mResultList.size() <= 0) {
-                blank_text_view.setText("No Bookings Found.");
-            } else {
-                bookingList.setVisibility(View.VISIBLE);
-                blank_view.setVisibility(View.GONE);
-            }
-        }
         working.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 isWorking = !isWorking;
                 working.setText(isWorking ? "On-Duty" : "Off-Duty");
                 if(isWorking) {
-                    nearJobListener();
-                    if(mResultList.size() <= 0) {
-                        blank_text_view.setText("No Bookings Found.");
-                    } else {
-                        bookingList.setVisibility(View.VISIBLE);
-                        blank_view.setVisibility(View.GONE);
-                    }
+                    getBookingList();
                 } else {
-                    blank_text_view.setText("You're Off-Duty.");
-                    blank_view.setVisibility(View.VISIBLE);
-                    bookingList.setVisibility(View.GONE);
-                    bookingList.setAdapter(null);
+                    booking_rec_vw.setVisibility(View.GONE);
+                    booking_loading_view.setVisibility(View.GONE);
+                    booking_blank_view.setVisibility(View.VISIBLE);
+                    booking_blank_txt_vw.setText("You're Off-Duty");
                 }
             }
         });
+        bookingAdapter = new BookingServicesAdapter(LandingActivity.this,
+                LandingActivity.this, bookingList);
+        booking_rec_vw = findViewById(R.id.booking_rec_vw);
+        booking_rec_vw.setAdapter(bookingAdapter);
+        booking_rec_vw.setHasFixedSize(true);
+        booking_rec_vw.setLayoutManager(new LinearLayoutManager(this));
+
+        if(isWorking) {
+            getBookingList();
+        } else {
+            booking_blank_view.setVisibility(View.VISIBLE);
+            booking_blank_txt_vw.setText("You're Off-Duty");
+        }
+
+        buildGoogleApiClient();
+    }
+
+    private void getBookingList() {
+        booking_blank_view.setVisibility(View.GONE);
+        booking_loading_view.setVisibility(View.VISIBLE);
+
+        bookingRef = FirebaseDatabase.getInstance().getReference("services");
+        bookingRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                bookingList.clear();
+                if(dataSnapshot.exists()) {
+                    for(DataSnapshot booking : dataSnapshot.getChildren())
+                        for (DataSnapshot pssngrid : booking.getChildren()) {
+                            boolean skip = false;
+                            String pass_id = pssngrid.getKey().toString();
+                            LatLng dropoffLoc = new LatLng();
+                            String dropoffName = "";
+                            LatLng pickupLoc = new LatLng();
+                            String pickupName = "";
+                            String fare = "";
+                            for(DataSnapshot bookingDetails : pssngrid.getChildren())
+                                switch (bookingDetails.getKey()) {
+                                    case "dropoff":
+                                        for(DataSnapshot dropoffDetails : bookingDetails.getChildren())
+                                            switch (dropoffDetails.getKey()) {
+                                                case "lat":
+                                                    dropoffLoc.setLatitude(
+                                                            Double.parseDouble(dropoffDetails.getValue().toString()));
+                                                    break;
+                                                case "lng":
+                                                    dropoffLoc.setLongitude(
+                                                            Double.parseDouble(dropoffDetails.getValue().toString()));
+                                                    break;
+                                                case "name":
+                                                    dropoffName = dropoffDetails.getValue().toString();
+                                                    break;
+                                            }
+                                        break;
+                                    case "pickup":
+                                        for(DataSnapshot pickupDetails : bookingDetails.getChildren())
+                                            switch (pickupDetails.getKey()) {
+                                                case "lat":
+                                                    pickupLoc.setLatitude(
+                                                            Double.parseDouble(pickupDetails.getValue().toString()));
+                                                    break;
+                                                case "lng":
+                                                    pickupLoc.setLongitude(
+                                                            Double.parseDouble(pickupDetails.getValue().toString()));
+                                                    break;
+                                                case "name":
+                                                    pickupName = pickupDetails.getValue().toString();
+                                                    break;
+                                            }
+                                        break;
+                                    case "fare":
+                                        fare = bookingDetails.getValue().toString();
+                                        break;
+                                    case "accepted_by":
+                                        if(!uid.equals(bookingDetails.getValue().toString()))
+                                            skip = true;
+                                        break;
+                                }
+                            if(!skip)
+                                bookingList.add(new BookingObject(pass_id,
+                                        pickupName, dropoffName, fare, pickupLoc, dropoffLoc));
+                            bookingAdapter.notifyDataSetChanged();
+                        }
+                } else bookingAdapter.notifyDataSetChanged();
+
+                if(bookingList.size() == 0) {
+                    booking_loading_view.setVisibility(View.GONE);
+                    booking_rec_vw.setVisibility(View.GONE);
+                    booking_blank_view.setVisibility(View.VISIBLE);
+                    booking_blank_txt_vw.setText("No Bookings Found.");
+                } else {
+                    booking_blank_view.setVisibility(View.GONE);
+                    booking_loading_view.setVisibility(View.GONE);
+                    booking_rec_vw.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) { }
+        });
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(5000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            if (ActivityCompat.checkSelfPermission(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                DialogCreator.create(this, "locationPermission")
+                        .setMessage("We need to access your location and device state to continue using FROURÁ.")
+                        .setPositiveButton("OK")
+                        .show();
+                return;
+            }
+        LocationServices.FusedLocationApi
+                .requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
+        GeoFire geoFire = new GeoFire(driversAvailable);
+        if (location != null && isWorking) {
+            geoFire.setLocation(uid, new GeoLocation(location.getLatitude(), location.getLongitude()));
+        } else {
+            geoFire.removeLocation(uid);
+        }
     }
 
     private void setDetails() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String JSON_DETAILS_KEY = "userDetails";
         String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
-        Log.d("FROURA_LOG_TAG", ""+userDetails);
         try {
             JSONObject jsonObject = new JSONObject(userDetails);
             if(!jsonObject.getString("profile_pic").equals("default")) {
@@ -222,27 +335,31 @@ public class LandingActivity extends AppCompatActivity
                         .into(nav_view_profile_pic);
             }
             user_name = jsonObject.getString("name");
-            user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
-            user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
+            user_email = jsonObject.getString("email").equals("null") ?
+                    "None" : jsonObject.getString("email");
+            user_mobnum = jsonObject.getString("mobnum").equals("null") ?
+                    "None" : jsonObject.getString("mobnum");
             nav_view_name.setText(user_name);
             nav_view_email.setText(user_email);
         } catch (Exception e) { e.printStackTrace(); }
     }
 
     private void removeNearest(String passId) {
-        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" + passId + "/nearest_driver");
+        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" +
+                passId + "/nearest_driver");
         dbref.removeValue();
     }
 
     private void acceptJob(int pos) {
-        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" + mResultList.get(pos).getUid());
+        DatabaseReference dbref = FirebaseDatabase.getInstance().getReference("services/booking/" +
+                bookingList.get(pos).getUid());
         dbref.child("accepted_by").setValue(uid);
-        removeNearest(mResultList.get(pos).getUid());
+        removeNearest(bookingList.get(pos).getUid());
         saveBookingDetails(pos);
     }
 
     private void saveBookingDetails(int pos) {
-        BookingObject booking = mResultList.get(pos);
+        BookingObject booking = bookingList.get(pos);
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "bookingDetails";
@@ -262,251 +379,9 @@ public class LandingActivity extends AppCompatActivity
         finish();
     }
 
-    private void nearJobListener() {
-        final DatabaseReference bookingRef = FirebaseDatabase.getInstance().getReference("services");
-        bookingRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                mResultList.clear();
-                for(DataSnapshot booking : dataSnapshot.getChildren()) {
-                    boolean nearjob = false;
-                    int count = 0;
-                    for (DataSnapshot pssngrid : booking.getChildren()) {
-                        boolean skip = false;
-                        String pass_id = pssngrid.getKey().toString();
-                        LatLng dropoffLoc = new LatLng();
-                        String dropoffName = "";
-                        LatLng pickupLoc = new LatLng();
-                        String pickupName = "";
-                        String fare = "";
-                        for(DataSnapshot bookingDetails : pssngrid.getChildren()) {
-                            switch (bookingDetails.getKey()) {
-                                case "dropoff":
-                                    for(DataSnapshot dropoffDetails : bookingDetails.getChildren()) {
-                                        switch (dropoffDetails.getKey()) {
-                                            case "lat":
-                                                dropoffLoc.setLatitude(Double.parseDouble(dropoffDetails.getValue().toString()));
-                                                break;
-                                            case "lng":
-                                                dropoffLoc.setLongitude(Double.parseDouble(dropoffDetails.getValue().toString()));
-                                                break;
-                                            case "name":
-                                                dropoffName = dropoffDetails.getValue().toString();
-                                                break;
-                                        }
-                                    }
-                                    break;
-                                case "pickup":
-                                    for(DataSnapshot pickupDetails : bookingDetails.getChildren()) {
-                                        switch (pickupDetails.getKey()) {
-                                            case "lat":
-                                                pickupLoc.setLatitude(Double.parseDouble(pickupDetails.getValue().toString()));
-                                                break;
-                                            case "lng":
-                                                pickupLoc.setLongitude(Double.parseDouble(pickupDetails.getValue().toString()));
-                                                break;
-                                            case "name":
-                                                pickupName = pickupDetails.getValue().toString();
-                                                break;
-                                        }
-                                    }
-                                    break;
-                                case "fare":
-                                    fare = bookingDetails.getValue().toString();
-                                    break;
-                                case "nearest_driver":
-                                    if(uid.equals(bookingDetails.getValue().toString())) {
-                                        nearjob = true;
-                                    }
-                                    break;
-                                case "accepted_by":
-                                    if(!uid.equals(bookingDetails.getValue().toString()))
-                                        skip = true;
-                                    break;
-                            }
-                        }
-                        if(!skip) {
-                            mResultList.add(new BookingObject(pass_id, pickupName, dropoffName, fare, pickupLoc, dropoffLoc));
-                            if(nearjob) {
-                                job_near(count);
-                            }
-                            count++;
-                        }
-                    }
-                }
-                if(isWorking) {
-                    if(mResultList.size() <= 0 || mResultList == null) {
-                        blank_text_view.setText("No Bookings Found.");
-                        bookingList.setVisibility(View.GONE);
-                        blank_view.setVisibility(View.VISIBLE);
-                    } else {
-                        bookingList.setVisibility(View.VISIBLE);
-                        blank_view.setVisibility(View.GONE);
-                    }
-                }
-                mAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void job_near(final int pos) {
-        Log.d("neardriver", "job_near");
-        final BookingObject bookingdetails = mResultList.get(pos);
-
-        View mView = getLayoutInflater().inflate(R.layout.dialog_job_near, null);
-        AlertDialog.Builder mBuilder = new AlertDialog.Builder(LandingActivity.this);
-        mBuilder.setView(mView);
-
-        final AlertDialog dialog = mBuilder.create();
-        TextView pickup = mView.findViewById(R.id.pickup);
-        TextView dropoff = mView.findViewById(R.id.dropoff);
-        TextView fare = mView.findViewById(R.id.fare);
-        final ProgressBar cntdwntimer = mView.findViewById(R.id.cntdwntimer);
-        Button acceptBtn = mView.findViewById(R.id.acceptBtn);
-        Button declineBtn = mView.findViewById(R.id.declineBtn);
-
-        final CountDownTimer timer = new CountDownTimer(15000, 1000) {
-            @Override
-            public void onTick(long l) {
-                cntdwntimer.setProgress(Integer.parseInt(l / 1000+""));
-            }
-
-            @Override
-            public void onFinish() {
-                if(dialog.isShowing())
-                    dialog.dismiss();
-            }
-        };
-        acceptBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                acceptJob(pos);
-                if(dialog.isShowing())
-                    dialog.dismiss();
-                timer.cancel();
-            }
-        });
-
-        declineBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                removeNearest(bookingdetails.getUid());
-
-                if(dialog.isShowing())
-                    dialog.dismiss();
-                timer.cancel();
-            }
-        });
-        pickup.setText(bookingdetails.getPickup());
-        dropoff.setText(bookingdetails.getDropoff());
-        fare.setText(bookingdetails.getFare());
-        dialog.setCancelable(false);
-        if(!this.isFinishing())
-            dialog.show();
-        timer.start();
-    }
-
-    private void job_accept(final int pos) {
-        final BookingObject bookingdetails = mResultList.get(pos);
-
-        View mView = getLayoutInflater().inflate(R.layout.dialog_job_near, null);
-        AlertDialog.Builder mBuilder = new AlertDialog.Builder(LandingActivity.this);
-        mBuilder.setView(mView);
-
-        final AlertDialog dialog = mBuilder.create();
-        TextView pickup = mView.findViewById(R.id.pickup);
-        TextView dropoff = mView.findViewById(R.id.dropoff);
-        TextView fare = mView.findViewById(R.id.fare);
-        Button acceptBtn = mView.findViewById(R.id.acceptBtn);
-        Button declineBtn = mView.findViewById(R.id.declineBtn);
-        acceptBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                acceptJob(pos);
-                if(dialog.isShowing())
-                    dialog.dismiss();
-            }
-        });
-
-        declineBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(dialog.isShowing())
-                    dialog.dismiss();
-            }
-        });
-        pickup.setText(bookingdetails.getPickup());
-        dropoff.setText(bookingdetails.getDropoff());
-        fare.setText(bookingdetails.getFare());
-        dialog.setCancelable(false);
-        if(!this.isFinishing())
-            dialog.show();
-    }
-
-    @Override
-    @SuppressWarnings( {"MissingPermission"})
-    public void onConnected() {
-        locationEngine.requestLocationUpdates();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
-        GeoFire geoFire = new GeoFire(driversAvailable);
-        if (location != null) {
-            originLocation = location;
-            if(isWorking) {
-                geoFire.setLocation(uid, new GeoLocation(location.getLatitude(), location.getLongitude()));
-            }
-        }
-    }
-
-    @Override
-    public void onExplanationNeeded(List<String> permissionsToExplain) {
-
-    }
-
-    @Override
-    public void onPermissionResult(boolean granted) {
-        if (granted) {
-            enableLocationPlugin();
-        } else {
-            finish();
-        }
-    }
-
-    @SuppressWarnings( {"MissingPermission"})
-    private void initializeLocationEngine() {
-        locationEngine = new LostLocationEngine(LandingActivity.this);
-        locationEngine.setPriority(LocationEnginePriority.HIGH_ACCURACY);
-        locationEngine.activate();
-
-        Location lastLocation = locationEngine.getLastLocation();
-        if (lastLocation != null) {
-            originLocation = lastLocation;
-        } else {
-            locationEngine.addLocationEngineListener(this);
-        }
-    }
-
-    @SuppressWarnings( {"MissingPermission"})
-    private void enableLocationPlugin() {
-        if (PermissionsManager.areLocationPermissionsGranted(this)) {
-            initializeLocationEngine();
-        } else {
-            permissionsManager = new PermissionsManager(this);
-            permissionsManager.requestLocationPermissions(this);
-        }
-    }
-
     @Override
     public void onBookingClick(ArrayList<BookingObject> mResultList, int position) {
-        job_accept(position);
+
     }
 
     @Override
@@ -604,10 +479,6 @@ public class LandingActivity extends AppCompatActivity
         });
     }
 
-    private void getReservations() {
-        SuperTask.execute(this, "get_reservations", TaskConfig.GET_RESERVATIONS_URL, "Fetching Data...");
-    }
-
     @Override
     public void onTaskRespond(String json, String id) {
         Log.d("FROURA_LOG", ""+json);
@@ -616,9 +487,11 @@ public class LandingActivity extends AppCompatActivity
                 try {
                     JSONObject jsonObject = new JSONObject(json);
                     if(jsonObject.getBoolean("success"))
-                        Toast.makeText(this, jsonObject.getString("message")+"", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this,
+                                jsonObject.getString("message")+"", Toast.LENGTH_SHORT).show();
                     else
-                        Toast.makeText(this, jsonObject.getString("message")+"", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this,
+                                jsonObject.getString("message")+"", Toast.LENGTH_SHORT).show();
                 } catch (Exception e) { }
                 break;
             case "get_reservations":
@@ -634,8 +507,12 @@ public class LandingActivity extends AppCompatActivity
                                         reservation.getString("driver_id"),
                                         reservation.getString("start_destination"),
                                         reservation.getString("end_destination"),
-                                        new com.google.android.gms.maps.model.LatLng(reservation.getDouble("start_lat"), reservation.getDouble("start_lng")),
-                                        new com.google.android.gms.maps.model.LatLng(reservation.getDouble("end_lat"), reservation.getDouble("end_lng")),
+                                        new com.google.android.gms.maps.model.LatLng(
+                                                reservation.getDouble("start_lat"),
+                                                reservation.getDouble("start_lng")),
+                                        new com.google.android.gms.maps.model.LatLng(
+                                                reservation.getDouble("end_lat"),
+                                                reservation.getDouble("end_lng")),
                                         reservation.getString("start_id"),
                                         reservation.getString("end_id"),
                                         reservation.getString("reservation_date"),
@@ -668,18 +545,15 @@ public class LandingActivity extends AppCompatActivity
                 contentValues.put("start_date", start_date);
                 contentValues.put("end_date", end_date);
                 contentValues.put("driver_id", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                Log.d("FROURA_LOG", contentValues+"");
-                return contentValues;
             case "get_reservations":
                 contentValues.put("id", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                return contentValues;
+
         }
-        return null;
+        return contentValues;
     }
 
     private void setHistoryList() {
         viewFlipper.setDisplayedChild(2);
-        toolbar.setTitle("History");
         final RecyclerView history_rec_vw = findViewById(R.id.history_rec_vw);
         final RelativeLayout history_loading_view = findViewById(R.id.history_loading_view);
         final RelativeLayout history_blank_view = findViewById(R.id.history_blank_view);
@@ -813,9 +687,6 @@ public class LandingActivity extends AppCompatActivity
     private ArrayList<ReservationObject> mReservationList = new ArrayList<>();
 
     private void showReservationList() {
-        viewFlipper.setDisplayedChild(1);
-        toolbar.setTitle("Reservation List");
-
         res_list_rec_vw = findViewById(R.id.res_list_rec_vw);
         res_list_loading_view = findViewById(R.id.res_list_loading_view);
         res_list_blank_view = findViewById(R.id.res_list_blank_view);
@@ -824,8 +695,6 @@ public class LandingActivity extends AppCompatActivity
         res_list_rec_vw.setAdapter(resAdapter);
         res_list_rec_vw.setHasFixedSize(true);
         res_list_rec_vw.setLayoutManager(new LinearLayoutManager(this));
-        res_list_loading_view = findViewById(R.id.loading_view);
-        blank_view = findViewById(R.id.blank_view);
         res_list_loading_view.setVisibility(View.VISIBLE);
         SuperTask.execute(this,
                 TaskConfig.RESERVATION_LIST_URL,
@@ -833,25 +702,25 @@ public class LandingActivity extends AppCompatActivity
     }
 
     @Override
-    public void onReservationListClick(ArrayList<ReservationObject> resultList, int position) {
-
-    }
+    public void onReservationListClick(ArrayList<ReservationObject> resultList, int position) { }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.booking:
+                toolbar.setTitle("Booking List");
                 viewFlipper.setDisplayedChild(0);
-                toolbar.setTitle("Booking Lists");
                 break;
             case R.id.reservation:
+                viewFlipper.setDisplayedChild(1);
+                toolbar.setTitle("Reservation List");
                 showReservationList();
                 break;
             case R.id.history:
-                setHistoryList();
                 viewFlipper.setDisplayedChild(2);
                 toolbar.setTitle("History");
+                setHistoryList();
                 break;
             case R.id.leave:
                 viewFlipper.setDisplayedChild(3);
@@ -863,8 +732,8 @@ public class LandingActivity extends AppCompatActivity
                 toolbar.setTitle("Profile");
                 break;
             case R.id.settings:
-                viewFlipper.setDisplayedChild(5);
-                toolbar.setTitle("Settings");
+                simulateMultipleBookings();
+                //viewFlipper.setDisplayedChild(5);
                 break;
             case R.id.logout:
                 SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -880,6 +749,20 @@ public class LandingActivity extends AppCompatActivity
         drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void simulateMultipleBookings() {
+        String[] passenger_id = {"1qgsXEDlaze1Nh7xlIJq5SMYANh2", "9k3C1juMLDP0EokhigwxSV4do1q2",
+                "CBSMPIf8QUat599EMGDjJPozz3d2", "CszQtAMzxDZnegIssEXtFo3jj6b2"},
+        dropoff_name = {"SM City Novaliches", "SM North Edsa", "NAIA Terminal 1", "NAIA Terminal 2"},
+        pickup_name = {"NAIA Terminal 2", "NAIA Terminal 1", "SM North Edsa", "SM City Novaliches"},
+        fare = {"128.00", "130.00", "140.00", "1200.00"};
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("services/booking");
+        for(int i = 0; i < passenger_id.length; i++) {
+            dbRef.child(passenger_id[i]).child("dropoff").child("name").setValue(dropoff_name[i]);
+            dbRef.child(passenger_id[i]).child("pickup").child("name").setValue(pickup_name[i]);
+            dbRef.child(passenger_id[i]).child("fare").setValue(fare[i]);
+        }
     }
 
     @Override
@@ -908,4 +791,10 @@ public class LandingActivity extends AppCompatActivity
 
     @Override
     public void onCreateDialogView(String actionId, View view) { }
+
+    @Override
+    public void onConnectionSuspended(int i) { }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) { }
 }

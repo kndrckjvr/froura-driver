@@ -5,6 +5,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -22,6 +24,7 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
     private Context mContext;
     private BookingServicesInterface mListener;
     private ArrayList<BookingObject> mResultList = new ArrayList<>();
+    private int lastPosition = -1;
 
     public BookingServicesAdapter(Context mContext, BookingServicesInterface mListener, ArrayList<BookingObject> mResultList) {
         this.mContext = mContext;
@@ -36,7 +39,7 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
     @Override
     public BookingServicesAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View convertView = layoutInflater.inflate(R.layout.booking_adapter, parent, false);
+        View convertView = layoutInflater.inflate(R.layout.adapter_booking, parent, false);
         ViewHolder mPredictionHolder = new ViewHolder(convertView);
         return mPredictionHolder;
     }
@@ -54,6 +57,7 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
                 mListener.onBookingClick(mResultList, position);
             }
         });
+        setAnimation(holder.itemView, position);
     }
 
     @Override
@@ -73,6 +77,14 @@ public class BookingServicesAdapter extends RecyclerView.Adapter<BookingServices
             dropoffTxtVw = v.findViewById(R.id.dropoff);
             fareTxtVw = v.findViewById(R.id.fare);
             acceptBtn = v.findViewById(R.id.acceptBtn);
+        }
+    }
+
+    private void setAnimation(View viewToAnimate, int position) {
+        if (position > lastPosition) {
+            Animation animation = AnimationUtils.loadAnimation(mContext, android.R.anim.slide_in_left);
+            viewToAnimate.startAnimation(animation);
+            lastPosition = position;
         }
     }
 }
