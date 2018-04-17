@@ -208,7 +208,7 @@ public class LandingActivity extends AppCompatActivity
                     for(DataSnapshot booking : dataSnapshot.getChildren())
                         for (DataSnapshot pssngrid : booking.getChildren()) {
                             boolean skip = false;
-                            String pass_id = pssngrid.getKey().toString();
+                            String pass_id = pssngrid.getKey();
                             LatLng dropoffLoc = new LatLng();
                             String dropoffName = "";
                             LatLng pickupLoc = new LatLng();
@@ -497,37 +497,35 @@ public class LandingActivity extends AppCompatActivity
             case "get_reservations":
                 try {
                     mReservationList.clear();
-                    try {
-                        JSONObject jsonObject = new JSONObject(json);
-                        if(jsonObject.getBoolean("success")) {
-                            JSONArray jsonArray = jsonObject.getJSONArray("reservations");
-                            for(int i = 0; i < jsonArray.length(); i++) {
-                                JSONObject reservation = jsonArray.getJSONObject(i);
-                                mReservationList.add(new ReservationObject(reservation.getInt("id"),
-                                        reservation.getString("driver_id"),
-                                        reservation.getString("start_destination"),
-                                        reservation.getString("end_destination"),
-                                        new com.google.android.gms.maps.model.LatLng(
-                                                reservation.getDouble("start_lat"),
-                                                reservation.getDouble("start_lng")),
-                                        new com.google.android.gms.maps.model.LatLng(
-                                                reservation.getDouble("end_lat"),
-                                                reservation.getDouble("end_lng")),
-                                        reservation.getString("start_id"),
-                                        reservation.getString("end_id"),
-                                        reservation.getString("reservation_date"),
-                                        reservation.getString("price"),
-                                        reservation.getString("notes"),
-                                        reservation.getInt("status")));
-                            }
-                            res_list_loading_view.setVisibility(View.GONE);
-                            res_list_rec_vw.setVisibility(View.VISIBLE);
-                            resAdapter.notifyDataSetChanged();
-                        } else  {
-                            res_list_loading_view.setVisibility(View.GONE);
-                            res_list_blank_view.setVisibility(View.VISIBLE);
+                    JSONObject jsonObject = new JSONObject(json);
+                    if(jsonObject.getBoolean("success")) {
+                        JSONArray jsonArray = jsonObject.getJSONArray("reservations");
+                        for(int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject reservation = jsonArray.getJSONObject(i);
+                            mReservationList.add(new ReservationObject(reservation.getInt("id"),
+                                    reservation.getString("driver_id"),
+                                    reservation.getString("start_destination"),
+                                    reservation.getString("end_destination"),
+                                    new com.google.android.gms.maps.model.LatLng(
+                                            reservation.getDouble("start_lat"),
+                                            reservation.getDouble("start_lng")),
+                                    new com.google.android.gms.maps.model.LatLng(
+                                            reservation.getDouble("end_lat"),
+                                            reservation.getDouble("end_lng")),
+                                    reservation.getString("start_id"),
+                                    reservation.getString("end_id"),
+                                    reservation.getString("reservation_date"),
+                                    reservation.getString("price"),
+                                    reservation.getString("notes"),
+                                    reservation.getInt("status")));
                         }
-                    } catch (JSONException e) { }
+                        res_list_loading_view.setVisibility(View.GONE);
+                        res_list_rec_vw.setVisibility(View.VISIBLE);
+                        resAdapter.notifyDataSetChanged();
+                    } else  {
+                        res_list_loading_view.setVisibility(View.GONE);
+                        res_list_blank_view.setVisibility(View.VISIBLE);
+                    }
                 } catch (Exception e) { }
                 break;
         }
@@ -730,6 +728,7 @@ public class LandingActivity extends AppCompatActivity
             case R.id.profile:
                 viewFlipper.setDisplayedChild(4);
                 toolbar.setTitle("Profile");
+                setProfile();
                 break;
             case R.id.settings:
                 simulateMultipleBookings();
@@ -749,6 +748,30 @@ public class LandingActivity extends AppCompatActivity
         drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void setProfile() {
+        ImageView profile_img_vw = findViewById(R.id.profile_img_vw);
+        TextView profile_name_txt_vw = findViewById(R.id.profile_name_txt_vw);
+        TextView profile_email_txt_vw = findViewById(R.id.profile_email_txt_vw);
+        TextView profile_mobnum_txt_vw = findViewById(R.id.profile_mobnum_txt_vw);
+        TextView profile_plate_txt_vw = findViewById(R.id.profile_plate_txt_vw);
+
+        Glide.with(this)
+                .load((user_pic.equals("default")) ? getImage("placeholder") : user_pic)
+                .apply(RequestOptions.circleCropTransform())
+                .into(profile_img_vw);
+
+        profile_name_txt_vw.setText(user_name);
+        profile_email_txt_vw.setText(user_email);
+        profile_mobnum_txt_vw.setText(user_mobnum);
+        profile_plate_txt_vw.setText("");
+    }
+
+    public int getImage(String imageName) {
+        int drawableResourceId = this.getResources()
+                .getIdentifier(imageName, "drawable", this.getPackageName());
+        return drawableResourceId;
     }
 
     private void simulateMultipleBookings() {
