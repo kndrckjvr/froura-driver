@@ -3,6 +3,8 @@ package com.froura.develo4.driver.utils;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -94,6 +96,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
             httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoInput(true);
             httpURLConnection.setDoOutput(true);
+            httpURLConnection.setReadTimeout(2000);
 
             OutputStream outputStream = new BufferedOutputStream(httpURLConnection.getOutputStream());
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
@@ -118,7 +121,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
             httpURLConnection.disconnect();
 
             return stringBuilder.toString();
-        } catch (Exception ignored) { }
+        } catch (Exception e) {}
         return null;
     }
 
@@ -128,5 +131,22 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
         ((TaskListener)this.context).onTaskRespond(json, id);
         if(progressDialog != null)
             progressDialog.dismiss();
+    }
+
+    public static boolean isNetworkAvailable(Context context) {
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+        }
+        return haveConnectedWifi || haveConnectedMobile;
     }
 }

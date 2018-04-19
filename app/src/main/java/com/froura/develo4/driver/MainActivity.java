@@ -1,5 +1,6 @@
 package com.froura.develo4.driver;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -11,12 +12,18 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.froura.develo4.driver.config.TaskConfig;
 import com.froura.develo4.driver.registration.LoginActivity;
 import com.froura.develo4.driver.utils.DialogCreator;
+import com.froura.develo4.driver.utils.SuperTask;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class MainActivity extends AppCompatActivity implements DialogCreator.DialogActionListener {
+import org.json.JSONObject;
+
+public class MainActivity extends AppCompatActivity implements
+        DialogCreator.DialogActionListener,
+        SuperTask.TaskListener {
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -37,36 +44,53 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if(user == null) {
-                    //Check network connection
                     Intent intent = new Intent(MainActivity.this, LoginActivity.class);
                     startActivity(intent);
                     finish();
                     return;
                 } else {
-                    Intent intent = new Intent(MainActivity.this, LandingActivity.class);
-                    startActivity(intent);
-                    finish();
-                    return;
+                    if(SuperTask.isNetworkAvailable(MainActivity.this)) {
+                        SuperTask.execute(MainActivity.this,
+                                TaskConfig.CHECK_CONNECTION_URL,
+                                "check_connection");
+                    } else {
+                        DialogCreator.create(MainActivity.this, "connectionError")
+                                .setCancelable(false)
+                                .setTitle("No Internet Connection")
+                                .setMessage("This application needs an Internet Connection.")
+                                .setPositiveButton("Exit")
+                                .show();
+                    }
                 }
             }
         };
     }
 
-    private boolean haveNetworkConnection() {
-        boolean haveConnectedWifi = false;
-        boolean haveConnectedMobile = false;
-
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
-        for (NetworkInfo ni : netInfo) {
-            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
-                if (ni.isConnected())
-                    haveConnectedWifi = true;
-            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
-                if (ni.isConnected())
-                    haveConnectedMobile = true;
+    @Override
+    public void onTaskRespond(String json, String id) {
+        switch (id) {
+            case "check_connection":
+                try {
+                    JSONObject jsonObject = new JSONObject(json);
+                    if(jsonObject.getString("status").equals("success")) {
+                        //updated
+                    }
+                } catch (NullPointerException e) {
+                    DialogCreator.create(MainActivity.this, "connectionError")
+                            .setCancelable(false)
+                            .setTitle("No Internet Connection")
+                            .setMessage("This application needs an Internet Connection.")
+                            .setPositiveButton("Exit")
+                            .show();
+                } catch (Exception e) { }
+                break;
         }
-        return haveConnectedWifi || haveConnectedMobile;
+    }
+
+    @Override
+    public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        contentValues.put("android", 1);
+        return contentValues;
     }
 
     public int getImage(String imageName) {
@@ -98,22 +122,14 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     }
 
     @Override
-    public void onClickNegativeButton(String actionId) {
-
-    }
+    public void onClickNegativeButton(String actionId) { }
 
     @Override
-    public void onClickNeutralButton(String actionId) {
-
-    }
+    public void onClickNeutralButton(String actionId) { }
 
     @Override
-    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) {
-
-    }
+    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) { }
 
     @Override
-    public void onCreateDialogView(String actionId, View view) {
-
-    }
+    public void onCreateDialogView(String actionId, View view) { }
 }
