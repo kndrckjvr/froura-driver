@@ -73,7 +73,9 @@ public class MainActivity extends AppCompatActivity implements
                 try {
                     JSONObject jsonObject = new JSONObject(json);
                     if(jsonObject.getString("status").equals("success")) {
-                        //updated
+                        Intent intent = new Intent(MainActivity.this, LandingActivity.class);
+                        startActivity(intent);
+                        finish();
                     }
                 } catch (NullPointerException e) {
                     DialogCreator.create(MainActivity.this, "connectionError")

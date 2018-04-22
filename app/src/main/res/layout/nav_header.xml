@@ -17,6 +17,8 @@
         android:layout_height="90dp"
         android:layout_gravity="center_horizontal"
         android:paddingTop="20dp"
+        android:background="@drawable/background_profile_image"
+        android:padding="4dp"
         app:srcCompat="@drawable/placeholder" />
 
     <TextView

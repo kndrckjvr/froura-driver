@@ -13,6 +13,7 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -128,6 +129,14 @@ public class LandingActivity extends AppCompatActivity
     private RelativeLayout booking_loading_view;
     private RelativeLayout booking_blank_view;
     private TextView booking_blank_txt_vw;
+
+    private Button send_leave_btn;
+    private int start_month;
+    private int start_day;
+    private int start_year;
+    private int end_month;
+    private int end_day;
+    private int end_year;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -399,12 +408,15 @@ public class LandingActivity extends AppCompatActivity
         final int currentYear = cal.get(Calendar.YEAR);
         final int currentMonth =  cal.get(Calendar.MONTH);
         final int currentDay =  cal.get(Calendar.DAY_OF_MONTH);
+        start_month = end_month = currentMonth;
+        start_day = end_day = currentDay + 1;
+        start_year = end_year = currentYear;
         final TextView start_date_txt_vw = findViewById(R.id.start_date_txt_vw);
         final TextView end_date_txt_vw = findViewById(R.id.end_date_txt_vw);
         final TextInputEditText reason_et = findViewById(R.id.reason_et);
         Button edit_start_date_btn = findViewById(R.id.edit_start_date_btn);
         Button edit_end_date_btn = findViewById(R.id.edit_end_date_btn);
-        final Button button = findViewById(R.id.send_leave_btn);
+        send_leave_btn = findViewById(R.id.send_leave_btn);
 
         start_date_txt_vw.setText(String.format(Locale.ENGLISH, "%s %02d, %04d",
                 monthNames[currentMonth], (currentDay + 1), currentYear));
@@ -421,10 +433,17 @@ public class LandingActivity extends AppCompatActivity
                         new DatePickerDialog.OnDateSetListener() {
                             @Override
                             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                                int temp_day = day, temp_month = month, temp_year = year;
                                 if(year < currentYear || month < currentMonth || day <= currentDay) {
                                     SnackBarCreator.set("Leaves must be a day after the current date.");
-                                    SnackBarCreator.show(button);
+                                    SnackBarCreator.show(send_leave_btn);
+                                } else if(end_day < temp_day || end_month < temp_month || end_year < temp_year) {
+                                    SnackBarCreator.set("Start of Leave Date must be earlier or has the same date than End of Leave Date.");
+                                    SnackBarCreator.show(send_leave_btn, true);
                                 } else {
+                                    start_day = day;
+                                    start_month = month;
+                                    start_year = year;
                                     start_date_txt_vw.setText(String.format(Locale.ENGLISH, "%s %02d, %04d",
                                             monthNames[month], day, year));
                                     month += 1;
@@ -432,7 +451,7 @@ public class LandingActivity extends AppCompatActivity
                                             year, month, day);
                                 }
                             }
-                        }, currentYear, currentMonth, currentDay + 1);
+                        }, start_year, start_month, (currentDay != start_day ? start_day : currentDay + 1));
                 dialog.show();
             }
         });
@@ -444,10 +463,17 @@ public class LandingActivity extends AppCompatActivity
                         new DatePickerDialog.OnDateSetListener() {
                             @Override
                             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
+                                int temp_day = day, temp_month = month, temp_year = year;
                                 if(year < currentYear || month < currentMonth || day <= currentDay) {
                                     SnackBarCreator.set("Leaves must be a day after the current date.");
-                                    SnackBarCreator.show(button);
+                                    SnackBarCreator.show(send_leave_btn);
+                                } else if(temp_day < start_day || temp_month < start_month || temp_year < start_year) {
+                                    SnackBarCreator.set("Start of Leave Date must be earlier or has the same date than End of Leave Date.");
+                                    SnackBarCreator.show(send_leave_btn, true);
                                 } else {
+                                    end_day = day;
+                                    end_month = month;
+                                    end_year = year;
                                     end_date_txt_vw.setText(String.format(Locale.ENGLISH, "%s %02d, %04d",
                                             monthNames[month], day, year));
                                     month += 1;
@@ -455,43 +481,46 @@ public class LandingActivity extends AppCompatActivity
                                             year, month, day);
                                 }
                             }
-                        }, currentYear, currentMonth, currentDay + 1);
+                        }, end_year, end_month, (currentDay != end_day ? end_day : currentDay + 1));
                 dialog.show();
             }
         });
 
-        button.setOnClickListener(new View.OnClickListener() {
+        send_leave_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 reason = reason_et.getText().toString().isEmpty() ? "" : reason_et.getText().toString();
+                if(reason.isEmpty()) {
+                    SnackBarCreator.set("Please enter a valid reason.");
+                    SnackBarCreator.show(view);
+                } else {
+                    SuperTask.execute(LandingActivity.this,
+                            TaskConfig.SEND_LEAVE_URL,
+                            "send_file",
+                            "Sending Leave...");
 
-                SuperTask.execute(LandingActivity.this,
-                        TaskConfig.SEND_LEAVE_URL,
-                        "send_file",
-                        "Sending Leave...");
-
-                start_date = String.format(Locale.ENGLISH, "%04d-%02d-%02d 00:00:00",
-                        cal.get(Calendar.YEAR), cal.get(Calendar.DAY_OF_MONTH), (cal.get(Calendar.DAY_OF_MONTH) + 1));
-                end_date = String.format(Locale.ENGLISH, "%04d-%02d-%02d 00:00:00",
-                        cal.get(Calendar.YEAR), cal.get(Calendar.DAY_OF_MONTH), (cal.get(Calendar.DAY_OF_MONTH) + 1));
-                reason_et.setText("");
+                    start_date = String.format(Locale.ENGLISH, "%04d-%02d-%02d 00:00:00",
+                            cal.get(Calendar.YEAR), cal.get(Calendar.DAY_OF_MONTH), (cal.get(Calendar.DAY_OF_MONTH) + 1));
+                    end_date = String.format(Locale.ENGLISH, "%04d-%02d-%02d 00:00:00",
+                            cal.get(Calendar.YEAR), cal.get(Calendar.DAY_OF_MONTH), (cal.get(Calendar.DAY_OF_MONTH) + 1));
+                    reason_et.setText("");
+                }
             }
         });
     }
 
     @Override
     public void onTaskRespond(String json, String id) {
-        Log.d("FROURA_LOG", ""+json);
         switch (id) {
             case "send_file":
                 try {
                     JSONObject jsonObject = new JSONObject(json);
-                    if(jsonObject.getBoolean("success"))
-                        Toast.makeText(this,
-                                jsonObject.getString("message")+"", Toast.LENGTH_SHORT).show();
-                    else
-                        Toast.makeText(this,
-                                jsonObject.getString("message")+"", Toast.LENGTH_SHORT).show();
+                    if(jsonObject.getBoolean("success")) {
+                        SnackBarCreator.set(jsonObject.getString("message"));
+                        SnackBarCreator.show(send_leave_btn);
+                    } else {
+
+                    }
                 } catch (Exception e) { }
                 break;
             case "get_reservations":
@@ -545,7 +574,6 @@ public class LandingActivity extends AppCompatActivity
                 contentValues.put("driver_id", FirebaseAuth.getInstance().getCurrentUser().getUid());
             case "get_reservations":
                 contentValues.put("id", FirebaseAuth.getInstance().getCurrentUser().getUid());
-
         }
         return contentValues;
     }
