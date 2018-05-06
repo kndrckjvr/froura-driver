@@ -175,6 +175,7 @@ public class LandingActivity extends AppCompatActivity
         working.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                updateStatus();
                 isWorking = !isWorking;
                 working.setText(isWorking ? "On-Duty" : "Off-Duty");
                 if(isWorking) {
@@ -319,14 +320,25 @@ public class LandingActivity extends AppCompatActivity
                 .requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
+    private void updateStatus() {
+        DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
+        DatabaseReference driversWorking = FirebaseDatabase.getInstance().getReference("working_drivers");
+        GeoFire available = new GeoFire(driversAvailable);
+        GeoFire working = new GeoFire(driversWorking);
+        if(isWorking) {
+            available.removeLocation(uid);
+            working.setLocation(uid, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
+        } else {
+            working.removeLocation(uid);
+            available.setLocation(uid, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
+        }
+    }
+
     @Override
     public void onLocationChanged(Location location) {
-        DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
-        GeoFire geoFire = new GeoFire(driversAvailable);
-        if (location != null && isWorking) {
-            geoFire.setLocation(uid, new GeoLocation(location.getLatitude(), location.getLongitude()));
-        } else {
-            geoFire.removeLocation(uid);
+        if (location != null) {
+            mLastLocation = location;
+            updateStatus();
         }
     }
 
@@ -829,6 +841,14 @@ public class LandingActivity extends AppCompatActivity
                         LOCATION_REQUEST_CODE);
                 break;
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        DatabaseReference driversAvailable = FirebaseDatabase.getInstance().getReference("available_drivers");
+        GeoFire available = new GeoFire(driversAvailable);
+        available.removeLocation(uid);
     }
 
     @Override
