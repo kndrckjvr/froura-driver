@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -19,6 +20,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -29,6 +31,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -101,6 +104,7 @@ public class LandingActivity extends AppCompatActivity
     private String uid;
 
     private boolean isWorking = false;
+    private boolean isNearShown = false;
     private DatabaseReference bookingRef;
 
     private String user_name;
@@ -144,8 +148,6 @@ public class LandingActivity extends AppCompatActivity
         setContentView(R.layout.activity_landing);
 
         uid = FirebaseAuth.getInstance().getUid();
-
-
         toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Booking List");
         setSupportActionBar(toolbar);
@@ -215,7 +217,8 @@ public class LandingActivity extends AppCompatActivity
             public void onDataChange(DataSnapshot dataSnapshot) {
                 bookingList.clear();
                 if(dataSnapshot.exists()) {
-                    for(DataSnapshot booking : dataSnapshot.getChildren())
+                    for(DataSnapshot booking : dataSnapshot.getChildren()) {
+                        int count = 0;
                         for (DataSnapshot pssngrid : booking.getChildren()) {
                             boolean skip = false;
                             String pass_id = pssngrid.getKey();
@@ -265,12 +268,20 @@ public class LandingActivity extends AppCompatActivity
                                         if(!uid.equals(bookingDetails.getValue().toString()))
                                             skip = true;
                                         break;
+                                    case "nearest_driver":
+                                        if(!isNearShown) {
+                                            isNearShown = true;
+                                            jobNearShow(count);
+                                        }
+                                        break;
                                 }
                             if(!skip)
                                 bookingList.add(new BookingObject(pass_id,
                                         pickupName, dropoffName, fare, pickupLoc, dropoffLoc));
                             bookingAdapter.notifyDataSetChanged();
                         }
+                        count++;
+                    }
                 } else bookingAdapter.notifyDataSetChanged();
 
                 if(bookingList.size() == 0) {
@@ -288,6 +299,60 @@ public class LandingActivity extends AppCompatActivity
             @Override
             public void onCancelled(DatabaseError databaseError) { }
         });
+    }
+
+    private void jobNearShow(final int pos) {
+        final BookingObject booking = bookingList.get(pos);
+        View mView = getLayoutInflater().inflate(R.layout.dialog_job_near, null);
+        AlertDialog.Builder mBuilder = new AlertDialog.Builder(LandingActivity.this);
+        mBuilder.setView(mView);
+        final AlertDialog dialog = mBuilder.create();
+        TextView pickup = mView.findViewById(R.id.pickup);
+        TextView dropoff = mView.findViewById(R.id.dropoff);
+        TextView fare = mView.findViewById(R.id.fare);
+        final ProgressBar cntdwntimer = mView.findViewById(R.id.cntdwntimer);
+        Button acceptBtn = mView.findViewById(R.id.acceptBtn);
+        Button declineBtn = mView.findViewById(R.id.declineBtn);
+
+        final CountDownTimer timer = new CountDownTimer(15000, 1000) {
+            @Override
+            public void onTick(long l) {
+                cntdwntimer.setProgress(Integer.parseInt(l / 1000+""));
+            }
+
+            @Override
+            public void onFinish() {
+                if(dialog.isShowing())
+                    dialog.dismiss();
+            }
+        };
+        acceptBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                acceptJob(pos);
+                if(dialog.isShowing())
+                    dialog.dismiss();
+                timer.cancel();
+            }
+        });
+
+        declineBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                removeNearest(booking.getUid());
+
+                if(dialog.isShowing())
+                    dialog.dismiss();
+                timer.cancel();
+            }
+        });
+        pickup.setText(booking.getPickup());
+        dropoff.setText(booking.getDropoff());
+        fare.setText(booking.getFare());
+        dialog.setCancelable(false);
+        if(!this.isFinishing())
+            dialog.show();
+        timer.start();
     }
 
     protected synchronized void buildGoogleApiClient() {
