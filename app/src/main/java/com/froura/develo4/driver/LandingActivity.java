@@ -104,7 +104,6 @@ public class LandingActivity extends AppCompatActivity
     private String uid;
 
     private boolean isWorking = false;
-    private boolean isNearShown = false;
     private DatabaseReference bookingRef;
 
     private String user_name;
@@ -268,12 +267,6 @@ public class LandingActivity extends AppCompatActivity
                                         if(!uid.equals(bookingDetails.getValue().toString()))
                                             skip = true;
                                         break;
-                                    case "nearest_driver":
-                                        if(!isNearShown) {
-                                            isNearShown = true;
-                                            jobNearShow(count);
-                                        }
-                                        break;
                                 }
                             if(!skip)
                                 bookingList.add(new BookingObject(pass_id,
@@ -301,58 +294,41 @@ public class LandingActivity extends AppCompatActivity
         });
     }
 
-    private void jobNearShow(final int pos) {
-        final BookingObject booking = bookingList.get(pos);
+    private void job_accept(final int pos) {
+        final BookingObject bookingdetails = bookingList.get(pos);
+
         View mView = getLayoutInflater().inflate(R.layout.dialog_job_near, null);
         AlertDialog.Builder mBuilder = new AlertDialog.Builder(LandingActivity.this);
         mBuilder.setView(mView);
+
         final AlertDialog dialog = mBuilder.create();
         TextView pickup = mView.findViewById(R.id.pickup);
         TextView dropoff = mView.findViewById(R.id.dropoff);
         TextView fare = mView.findViewById(R.id.fare);
-        final ProgressBar cntdwntimer = mView.findViewById(R.id.cntdwntimer);
         Button acceptBtn = mView.findViewById(R.id.acceptBtn);
         Button declineBtn = mView.findViewById(R.id.declineBtn);
-
-        final CountDownTimer timer = new CountDownTimer(15000, 1000) {
-            @Override
-            public void onTick(long l) {
-                cntdwntimer.setProgress(Integer.parseInt(l / 1000+""));
-            }
-
-            @Override
-            public void onFinish() {
-                if(dialog.isShowing())
-                    dialog.dismiss();
-            }
-        };
         acceptBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 acceptJob(pos);
                 if(dialog.isShowing())
                     dialog.dismiss();
-                timer.cancel();
             }
         });
 
         declineBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                removeNearest(booking.getUid());
-
                 if(dialog.isShowing())
                     dialog.dismiss();
-                timer.cancel();
             }
         });
-        pickup.setText(booking.getPickup());
-        dropoff.setText(booking.getDropoff());
-        fare.setText(booking.getFare());
+        pickup.setText(bookingdetails.getPickup());
+        dropoff.setText(bookingdetails.getDropoff());
+        fare.setText(bookingdetails.getFare());
         dialog.setCancelable(false);
         if(!this.isFinishing())
             dialog.show();
-        timer.start();
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -428,6 +404,11 @@ public class LandingActivity extends AppCompatActivity
             nav_view_name.setText(user_name);
             nav_view_email.setText(user_email);
         } catch (Exception e) { e.printStackTrace(); }
+        if(sharedPref.contains("bookingDetails")) {
+            Intent intent = new Intent(this, JobAcceptActivity.class);
+            startActivity(intent);
+            finish();
+        }
     }
 
     private void removeNearest(String passId) {
@@ -467,7 +448,7 @@ public class LandingActivity extends AppCompatActivity
 
     @Override
     public void onBookingClick(ArrayList<BookingObject> mResultList, int position) {
-
+        job_accept(position);
     }
 
     @Override
