@@ -343,6 +343,7 @@ public class JobAcceptActivity extends AppCompatActivity
     @Override
     public void onClickPositiveButton(String actionId) {
         SharedPreferences.Editor editor = sharedPref.edit();
+        String userDetails = sharedPref.getString("userDetails", "");
         switch (actionId) {
             case "pickupPass":
                 editor.remove("pickupClicked");
@@ -367,10 +368,14 @@ public class JobAcceptActivity extends AppCompatActivity
                 cancel_booking_btn.setBackground(getResources().getDrawable(R.drawable.background_border_sharp_disabled));
                 break;
             case "cancel_booking":
+                editor.clear();
+                editor.putString("userDetails", userDetails);
+                editor.apply();
                 DatabaseReference dbRef = FirebaseDatabase.getInstance()
                         .getReference("services/booking/" + passenger_id +"/cancelled_by");
                 dbRef.child("driver").setValue(true);
                 Intent intent = new Intent(JobAcceptActivity.this, LandingActivity.class);
+                intent.putExtra("fromJob", true);
                 startActivity(intent);
                 finish();
                 break;
@@ -383,7 +388,6 @@ public class JobAcceptActivity extends AppCompatActivity
                             .setNegativeButton("Cancel")
                             .show();
                 } else {
-                    String userDetails = sharedPref.getString("userDetails", "");
                     editor.clear();
                     editor.putString("userDetails", userDetails);
                     editor.apply();
